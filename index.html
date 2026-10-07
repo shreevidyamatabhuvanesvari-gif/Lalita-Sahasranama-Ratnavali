@@ -2,18 +2,28 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <meta
     name="description"
-    content="श्रीललितासहस्रनाम स्तोत्र रत्नावली — 9:16 वीडियो एवं महिला संस्कृत TTS"
+    content="श्रीललितासहस्रनाम स्तोत्र रत्नावली — संपूर्ण संस्कृत पाठ, महिला संस्कृत TTS तथा 9:16 वीडियो वाचन"
   >
 
-  <meta name="theme-color" content="#111111">
+  <meta
+    name="theme-color"
+    content="#111111"
+  >
 
   <title>श्रीललितासहस्रनाम स्तोत्र रत्नावली</title>
 
-  <link rel="stylesheet" href="style.css">
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 </head>
 
 <body>
@@ -25,15 +35,47 @@
     data-content-source="data/lalita-sahasranama-ratnavali.json"
   >
 
-    <!-- ==================== VIDEO ==================== -->
+    <!-- =========================================================
+         HEADER
+    ========================================================== -->
+
+    <header
+      id="appHeader"
+      class="app-header"
+    >
+
+      <h1>
+        श्रीललितासहस्रनाम स्तोत्र रत्नावली
+      </h1>
+
+      <p>
+        संपूर्ण पाठ के साथ समन्वित 9:16 वीडियो एवं संस्कृत वाचन
+      </p>
+
+    </header>
+
+
+    <!-- =========================================================
+         VIDEO
+    ========================================================== -->
 
     <section
       id="videoSection"
       class="video-section"
-      aria-label="वीडियो प्रस्तुति"
+      aria-labelledby="videoTitle"
     >
 
-      <div class="video-container">
+      <h2
+        id="videoTitle"
+        class="section-title"
+      >
+        वीडियो प्रस्तुति
+      </h2>
+
+      <div
+        id="videoContainer"
+        class="video-container"
+      >
 
         <video
           id="videoPlayer"
@@ -41,15 +83,18 @@
           playsinline
           preload="metadata"
           loop
+          controlslist="nodownload noplaybackrate"
           aria-label="श्रीललितासहस्रनाम स्तोत्र रत्नावली वीडियो"
-        ></video>
+        >
+        </video>
 
         <div
           id="videoPlaceholder"
           class="video-placeholder"
           aria-hidden="true"
         >
-          9:16
+          <span>9:16</span>
+          <small>वीडियो अपलोड करें</small>
         </div>
 
       </div>
@@ -59,14 +104,17 @@
         class="video-status"
         role="status"
         aria-live="polite"
+        aria-atomic="true"
       >
-        वीडियो अपलोड करें।
+        अभी कोई वीडियो चयनित नहीं है।
       </div>
 
     </section>
 
 
-    <!-- ==================== PLAYBACK ==================== -->
+    <!-- =========================================================
+         PLAYBACK CONTROLS
+    ========================================================== -->
 
     <section
       id="playbackControls"
@@ -76,32 +124,43 @@
 
       <button
         id="playButton"
+        class="control-button play-button"
         type="button"
-        aria-label="चलाएँ"
+        data-action="play"
+        aria-label="वाचन और वीडियो प्रारंभ करें"
       >
-        ▶
+        <span aria-hidden="true">▶</span>
+        <span>चलाएँ</span>
       </button>
 
       <button
         id="pauseButton"
+        class="control-button pause-button"
         type="button"
-        aria-label="रोकें"
+        data-action="pause"
+        aria-label="वाचन और वीडियो रोकें"
       >
-        ⏸
+        <span aria-hidden="true">⏸</span>
+        <span>रोकें</span>
       </button>
 
       <button
         id="stopButton"
+        class="control-button stop-button"
         type="button"
-        aria-label="बंद करें"
+        data-action="stop"
+        aria-label="वाचन और वीडियो बंद करके प्रारंभिक स्थिति में लाएँ"
       >
-        ⏹
+        <span aria-hidden="true">⏹</span>
+        <span>बंद करें</span>
       </button>
 
     </section>
 
 
-    <!-- ==================== SANSKRIT TEXT ==================== -->
+    <!-- =========================================================
+         SANSKRIT TEXT
+    ========================================================== -->
 
     <section
       id="textSection"
@@ -109,40 +168,80 @@
       aria-labelledby="textTitle"
     >
 
-      <h1 id="textTitle">
-        श्रीललितासहस्रनाम स्तोत्र रत्नावली
-      </h1>
+      <div class="section-heading">
+
+        <h2 id="textTitle">
+          संपूर्ण संस्कृत पाठ
+        </h2>
+
+        <span
+          id="textSourceStatus"
+          class="text-source-status"
+          role="status"
+          aria-live="polite"
+        >
+          पाठ लोड किया जा रहा है…
+        </span>
+
+      </div>
+
 
       <div
         id="textContent"
         class="text-content"
         role="article"
-        aria-label="संपूर्ण संस्कृत पाठ"
-      ></div>
+        aria-label="श्रीललितासहस्रनाम स्तोत्र रत्नावली का संपूर्ण संस्कृत पाठ"
+      >
+      </div>
+
 
       <div
         id="currentSegment"
         class="current-segment"
         aria-live="polite"
-        aria-label="वर्तमान पाठ"
-      ></div>
+        aria-atomic="true"
+        aria-label="वर्तमान पाठ खंड"
+      >
+      </div>
 
     </section>
 
 
-    <!-- ==================== PROGRESS ==================== -->
+    <!-- =========================================================
+         PROGRESS
+    ========================================================== -->
 
     <section
       id="progressSection"
       class="progress-section"
-      aria-label="पाठ एवं TTS प्रगति"
+      aria-labelledby="progressTitle"
     >
+
+      <h2
+        id="progressTitle"
+        class="section-title"
+      >
+        प्रगति
+      </h2>
+
+
+      <!-- TEXT PROGRESS -->
 
       <div class="progress-item">
 
         <div class="progress-label">
-          <span>पाठ</span>
-          <span id="textProgressValue">0%</span>
+
+          <span>
+            पाठ प्रगति
+          </span>
+
+          <output
+            id="textProgressValue"
+            aria-label="पाठ प्रगति प्रतिशत"
+          >
+            0%
+          </output>
+
         </div>
 
         <progress
@@ -150,16 +249,30 @@
           value="0"
           max="100"
           aria-label="पाठ की प्रगति"
-        ></progress>
+        >
+          0%
+        </progress>
 
       </div>
 
 
+      <!-- TTS PROGRESS -->
+
       <div class="progress-item">
 
         <div class="progress-label">
-          <span>TTS</span>
-          <span id="ttsProgressValue">0%</span>
+
+          <span>
+            TTS प्रगति
+          </span>
+
+          <output
+            id="ttsProgressValue"
+            aria-label="TTS प्रगति प्रतिशत"
+          >
+            0%
+          </output>
+
         </div>
 
         <progress
@@ -167,14 +280,18 @@
           value="0"
           max="100"
           aria-label="TTS की प्रगति"
-        ></progress>
+        >
+          0%
+        </progress>
 
       </div>
 
     </section>
 
 
-    <!-- ==================== TTS ==================== -->
+    <!-- =========================================================
+         TTS
+    ========================================================== -->
 
     <section
       id="ttsSection"
@@ -186,14 +303,34 @@
         संस्कृत TTS
       </h2>
 
+
+      <!-- Female Sanskrit voice is mandatory. -->
+
       <div
         id="ttsVoiceStatus"
         class="tts-voice-status"
         role="status"
         aria-live="polite"
+        aria-atomic="true"
       >
         महिला संस्कृत TTS की उपलब्धता जाँची जा रही है…
       </div>
+
+
+      <!-- TTS STATUS -->
+
+      <div
+        id="ttsStatus"
+        class="tts-status"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        वाचन प्रारंभ नहीं हुआ है।
+      </div>
+
+
+      <!-- TTS RATE -->
 
       <div class="tts-setting">
 
@@ -201,58 +338,25 @@
           वाचन गति
         </label>
 
-        <input
-          id="ttsRate"
-          type="range"
-          min="0.6"
-          max="1.2"
-          step="0.05"
-          value="0.9"
-        >
+        <div class="tts-rate-control">
 
-        <output
-          id="ttsRateValue"
-          for="ttsRate"
-        >
-          0.90
-        </output>
+          <input
+            id="ttsRate"
+            type="range"
+            min="0.6"
+            max="1.2"
+            step="0.05"
+            value="0.9"
+            aria-label="संस्कृत वाचन गति"
+          >
 
-      </div>
+          <output
+            id="ttsRateValue"
+            for="ttsRate"
+          >
+            0.90
+          </output>
 
-    </section>
-
-
-    <!-- ==================== INDEX / ADMIN PANEL ==================== -->
-
-    <section
-      id="indexPanel"
-      class="index-panel"
-      aria-labelledby="indexTitle"
-    >
-
-      <h2 id="indexTitle">
-        Index Panel
-      </h2>
-
-      <div class="upload-group">
-
-        <label for="videoUpload">
-          9:16 वीडियो क्लिप
-        </label>
-
-        <input
-          id="videoUpload"
-          type="file"
-          accept="video/mp4,video/webm,video/*"
-        >
-
-        <div
-          id="videoUploadStatus"
-          class="upload-status"
-          role="status"
-          aria-live="polite"
-        >
-          कोई वीडियो चयनित नहीं है।
         </div>
 
       </div>
@@ -260,49 +364,176 @@
     </section>
 
 
-    <!-- ==================== COMPLETION STATE ==================== -->
+    <!-- =========================================================
+         INDEX / ADMIN PANEL
+    ========================================================== -->
+
+    <section
+      id="indexPanel"
+      class="index-panel"
+      aria-labelledby="indexTitle"
+    >
+
+      <div class="index-panel-inner">
+
+        <h2 id="indexTitle">
+          Index Panel
+        </h2>
+
+        <p class="index-panel-description">
+          9:16 वीडियो क्लिप अपलोड करें। चयनित वीडियो वाचन की
+          पूरी अवधि तक दोहराया जाएगा और संपूर्ण पाठ व TTS
+          पूर्ण होने पर स्वतः रुक जाएगा।
+        </p>
+
+
+        <div class="upload-group">
+
+          <label
+            for="videoUpload"
+            class="upload-label"
+          >
+            9:16 वीडियो क्लिप
+          </label>
+
+
+          <input
+            id="videoUpload"
+            name="videoUpload"
+            type="file"
+            accept="video/mp4,video/webm,video/ogg,video/*"
+            aria-describedby="videoUploadHint"
+          >
+
+
+          <small
+            id="videoUploadHint"
+            class="upload-hint"
+          >
+            MP4 या WebM जैसे वीडियो प्रारूप का उपयोग करें।
+          </small>
+
+
+          <div
+            id="videoUploadStatus"
+            class="upload-status"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            कोई वीडियो चयनित नहीं है।
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         COMPLETION STATE
+    ========================================================== -->
 
     <section
       id="completionSection"
       class="completion-section"
+      aria-labelledby="completionTitle"
       aria-live="polite"
       aria-atomic="true"
     >
 
-      <span
-        id="textCompletion"
-        data-complete="false"
+      <h2
+        id="completionTitle"
+        class="section-title"
       >
-        पाठ: अपूर्ण
-      </span>
+        वाचन स्थिति
+      </h2>
 
-      <span
-        id="ttsCompletion"
-        data-complete="false"
-      >
-        TTS: अपूर्ण
-      </span>
 
-      <span
-        id="completionGate"
-        data-complete="false"
+      <div class="completion-status-row">
+
+        <span
+          id="textCompletion"
+          class="completion-status"
+          data-complete="false"
+        >
+          पाठ: अपूर्ण
+        </span>
+
+
+        <span
+          id="ttsCompletion"
+          class="completion-status"
+          data-complete="false"
+        >
+          TTS: अपूर्ण
+        </span>
+
+
+        <span
+          id="completionGate"
+          class="completion-status"
+          data-complete="false"
+        >
+          वाचन जारी है
+        </span>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         SYSTEM STATUS
+    ========================================================== -->
+
+    <section
+      id="systemStatusSection"
+      class="system-status-section"
+      aria-labelledby="systemStatusTitle"
+    >
+
+      <h2
+        id="systemStatusTitle"
+        class="section-title"
       >
-        वाचन जारी है
-      </span>
+        सिस्टम स्थिति
+      </h2>
+
+      <div
+        id="systemStatus"
+        class="system-status"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        App प्रारंभ हो रहा है…
+      </div>
 
     </section>
 
   </main>
 
 
+  <!-- =========================================================
+       NOSCRIPT
+  ========================================================== -->
+
   <noscript>
-    इस App को चलाने के लिए JavaScript सक्षम होना आवश्यक है।
+    <div class="noscript-message">
+      इस App को चलाने के लिए JavaScript सक्षम करना आवश्यक है।
+    </div>
   </noscript>
 
 
+  <!-- =========================================================
+       APPLICATION SCRIPT
+  ========================================================== -->
+
   <script
     type="module"
-    src="app.js"
+    src="./app.js"
   ></script>
 
 </body>
