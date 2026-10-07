@@ -7,7 +7,7 @@
  *   - app.js     — current application logic
  *
  * Scope:
- *   - Layout
+ *   - Unified single-page layout
  *   - Responsive design
  *   - Typography
  *   - Video presentation
@@ -15,7 +15,7 @@
  *   - Sanskrit text highlighting
  *   - Progress indicators
  *   - TTS controls
- *   - Index Panel
+ *   - Integrated Index Panel
  *   - Completion / system status
  *   - Accessibility
  *   - Reduced Motion
@@ -59,7 +59,7 @@
   --radius-large: 20px;
 
   --content-width: 920px;
-  --index-width: 560px;
+  --index-width: 680px;
   --video-width: 430px;
 
   --space-1: 0.35rem;
@@ -139,7 +139,7 @@ video {
 #app {
   width: min(calc(100% - 2rem), var(--content-width));
   margin-inline: auto;
-  padding-block: var(--space-7);
+  padding-block: var(--space-6);
 }
 
 .app {
@@ -152,7 +152,7 @@ video {
    ========================================================= */
 
 .app-header {
-  margin-bottom: var(--space-7);
+  margin-bottom: var(--space-6);
   text-align: center;
 }
 
@@ -182,7 +182,7 @@ video {
 .tts-section,
 .completion-section,
 .system-status-section {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
   padding: var(--space-6);
   background: var(--surface-color);
   border: 1px solid var(--border-color);
@@ -276,7 +276,7 @@ video {
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
 }
 
 .playback-controls button,
@@ -310,6 +310,12 @@ video {
   transform: translateY(1px);
 }
 
+.playback-controls button:disabled,
+.index-actions button:disabled {
+  opacity: 0.55;
+  transform: none;
+}
+
 
 /* =========================================================
    TEXT CONTENT
@@ -328,10 +334,6 @@ video {
   font-size: clamp(1.05rem, 2.2vw, 1.28rem);
   line-height: 2.15;
 
-  /*
-   * Devanagari / Sanskrit friendly wrapping.
-   * Prevents unnecessary aggressive breaking.
-   */
   overflow-wrap: break-word;
   word-break: normal;
   hyphens: manual;
@@ -479,21 +481,22 @@ progress::-moz-progress-bar {
 
 
 /* =========================================================
-   INDEX PANEL
+   INDEX PANEL — INTEGRATED SINGLE-PAGE LAYOUT
    ========================================================= */
 
 .index-panel {
   width: min(100%, var(--index-width));
   margin-inline: auto;
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
 }
 
 .index-panel-inner {
-  padding: var(--space-6);
+  width: 100%;
+  padding: var(--space-5);
   background: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-large);
-  box-shadow: var(--shadow-medium);
+  box-shadow: var(--shadow-soft);
 }
 
 .index-panel-inner h2 {
@@ -504,8 +507,8 @@ progress::-moz-progress-bar {
 }
 
 .index-panel-description {
-  max-width: 48ch;
-  margin: 0 auto var(--space-5);
+  max-width: 58ch;
+  margin: 0 auto var(--space-4);
   color: var(--text-muted);
   font-size: 0.94rem;
   line-height: 1.7;
@@ -524,7 +527,7 @@ progress::-moz-progress-bar {
 
 #videoUpload {
   width: 100%;
-  max-width: var(--video-width);
+  max-width: none;
   min-height: 44px;
   padding: 0.55rem;
   background: var(--surface-soft);
@@ -563,16 +566,16 @@ progress::-moz-progress-bar {
 }
 
 .index-actions {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
-  flex-wrap: wrap;
   gap: var(--space-3);
-  margin-top: var(--space-5);
+  margin-top: var(--space-4);
 }
 
 .index-actions button {
-  flex: 1 1 10rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .index-actions button:nth-child(2) {
@@ -786,13 +789,16 @@ label:focus-visible {
     grid-column: 2;
   }
 
+  .index-panel {
+    width: 100%;
+  }
+
   .index-actions {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .index-actions button {
     width: 100%;
-    flex: 1 1 auto;
   }
 
   .completion-status-row {
@@ -852,15 +858,15 @@ label:focus-visible {
 @media (min-width: 481px) and (max-width: 900px) {
   #app {
     width: min(calc(100% - 1.5rem), var(--content-width));
-    padding-block: var(--space-6);
+    padding-block: var(--space-5);
+  }
+
+  .index-panel {
+    width: min(100%, 680px);
   }
 
   .index-actions {
-    justify-content: center;
-  }
-
-  .index-actions button {
-    flex: 1 1 12rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -870,16 +876,24 @@ label:focus-visible {
    ========================================================= */
 
 @media (min-width: 901px) {
+  #app {
+    padding-block: var(--space-6);
+  }
+
   .video-section {
-    padding-bottom: var(--space-7);
+    padding-bottom: var(--space-6);
   }
 
   .text-content {
     max-height: 620px;
   }
 
+  .index-panel {
+    width: min(100%, 680px);
+  }
+
   .index-actions {
-    justify-content: center;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
