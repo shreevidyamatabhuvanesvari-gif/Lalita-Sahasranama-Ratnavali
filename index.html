@@ -1,540 +1,127 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <meta
-    name="description"
-    content="श्रीललितासहस्रनाम स्तोत्र रत्नावली — संपूर्ण संस्कृत पाठ, महिला संस्कृत TTS तथा 9:16 वीडियो वाचन"
-  >
-
-  <meta
-    name="theme-color"
-    content="#111111"
-  >
-
-  <title>श्रीललितासहस्रनाम स्तोत्र रत्नावली</title>
-
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="श्रीललितासहस्रनाम स्तोत्र रत्नावली">
+<meta name="theme-color" content="#111111">
+<title>श्रीललितासहस्रनाम स्तोत्र रत्नावली</title>
+<link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
-  <main
-    id="app"
-    class="app"
-    data-app="lalita-sahasranama-ratnavali"
-    data-content-source="data/lalita-sahasranama-ratnavali.json"
-  >
-
-    <!-- =========================================================
-         HEADER
-    ========================================================== -->
-
-    <header
-      id="appHeader"
-      class="app-header"
-    >
-
-      <h1>
-        श्रीललितासहस्रनाम स्तोत्र रत्नावली
-      </h1>
-
-      <p>
-        संपूर्ण पाठ के साथ समन्वित 9:16 वीडियो एवं संस्कृत वाचन
-      </p>
-
-    </header>
-
-
-    <!-- =========================================================
-         VIDEO
-    ========================================================== -->
-
-    <section
-      id="videoSection"
-      class="video-section"
-      aria-labelledby="videoTitle"
-    >
-
-      <h2
-        id="videoTitle"
-        class="section-title"
-      >
-        वीडियो प्रस्तुति
-      </h2>
-
-      <div
-        id="videoContainer"
-        class="video-container"
-      >
-
-        <video
-          id="videoPlayer"
-          class="video-player"
-          playsinline
-          preload="metadata"
-          loop
-          controlslist="nodownload noplaybackrate"
-          aria-label="श्रीललितासहस्रनाम स्तोत्र रत्नावली वीडियो"
-        >
-        </video>
-
-        <div
-          id="videoPlaceholder"
-          class="video-placeholder"
-          aria-hidden="true"
-        >
-          <span>9:16</span>
-          <small>वीडियो अपलोड करें</small>
-        </div>
-
-      </div>
-
-      <div
-        id="videoStatus"
-        class="video-status"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        अभी कोई वीडियो चयनित नहीं है।
-      </div>
-
-    </section>
-
-
-    <!-- =========================================================
-         PLAYBACK CONTROLS
-    ========================================================== -->
-
-    <section
-      id="playbackControls"
-      class="playback-controls"
-      aria-label="प्लेबैक नियंत्रण"
-    >
-
-      <button
-        id="playButton"
-        class="control-button play-button"
-        type="button"
-        data-action="play"
-        aria-label="वाचन और वीडियो प्रारंभ करें"
-      >
-        <span aria-hidden="true">▶</span>
-        <span>चलाएँ</span>
-      </button>
-
-      <button
-        id="pauseButton"
-        class="control-button pause-button"
-        type="button"
-        data-action="pause"
-        aria-label="वाचन और वीडियो रोकें"
-      >
-        <span aria-hidden="true">⏸</span>
-        <span>रोकें</span>
-      </button>
-
-      <button
-        id="stopButton"
-        class="control-button stop-button"
-        type="button"
-        data-action="stop"
-        aria-label="वाचन और वीडियो बंद करके प्रारंभिक स्थिति में लाएँ"
-      >
-        <span aria-hidden="true">⏹</span>
-        <span>बंद करें</span>
-      </button>
-
-    </section>
-
-
-    <!-- =========================================================
-         SANSKRIT TEXT
-    ========================================================== -->
-
-    <section
-      id="textSection"
-      class="text-section"
-      aria-labelledby="textTitle"
-    >
-
-      <div class="section-heading">
-
-        <h2 id="textTitle">
-          संपूर्ण संस्कृत पाठ
-        </h2>
-
-        <span
-          id="textSourceStatus"
-          class="text-source-status"
-          role="status"
-          aria-live="polite"
-        >
-          पाठ लोड किया जा रहा है…
-        </span>
-
-      </div>
-
-
-      <div
-        id="textContent"
-        class="text-content"
-        role="article"
-        aria-label="श्रीललितासहस्रनाम स्तोत्र रत्नावली का संपूर्ण संस्कृत पाठ"
-      >
-      </div>
-
-
-      <div
-        id="currentSegment"
-        class="current-segment"
-        aria-live="polite"
-        aria-atomic="true"
-        aria-label="वर्तमान पाठ खंड"
-      >
-      </div>
-
-    </section>
-
-
-    <!-- =========================================================
-         PROGRESS
-    ========================================================== -->
-
-    <section
-      id="progressSection"
-      class="progress-section"
-      aria-labelledby="progressTitle"
-    >
-
-      <h2
-        id="progressTitle"
-        class="section-title"
-      >
-        प्रगति
-      </h2>
-
-
-      <!-- TEXT PROGRESS -->
-
-      <div class="progress-item">
-
-        <div class="progress-label">
-
-          <span>
-            पाठ प्रगति
-          </span>
-
-          <output
-            id="textProgressValue"
-            aria-label="पाठ प्रगति प्रतिशत"
-          >
-            0%
-          </output>
-
-        </div>
-
-        <progress
-          id="textProgress"
-          value="0"
-          max="100"
-          aria-label="पाठ की प्रगति"
-        >
-          0%
-        </progress>
-
-      </div>
-
-
-      <!-- TTS PROGRESS -->
-
-      <div class="progress-item">
-
-        <div class="progress-label">
-
-          <span>
-            TTS प्रगति
-          </span>
-
-          <output
-            id="ttsProgressValue"
-            aria-label="TTS प्रगति प्रतिशत"
-          >
-            0%
-          </output>
-
-        </div>
-
-        <progress
-          id="ttsProgress"
-          value="0"
-          max="100"
-          aria-label="TTS की प्रगति"
-        >
-          0%
-        </progress>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================================================
-         TTS
-    ========================================================== -->
-
-    <section
-      id="ttsSection"
-      class="tts-section"
-      aria-labelledby="ttsTitle"
-    >
-
-      <h2 id="ttsTitle">
-        संस्कृत TTS
-      </h2>
-
-
-      <!-- Female Sanskrit voice is mandatory. -->
-
-      <div
-        id="ttsVoiceStatus"
-        class="tts-voice-status"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        महिला संस्कृत TTS की उपलब्धता जाँची जा रही है…
-      </div>
-
-
-      <!-- TTS STATUS -->
-
-      <div
-        id="ttsStatus"
-        class="tts-status"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        वाचन प्रारंभ नहीं हुआ है।
-      </div>
-
-
-      <!-- TTS RATE -->
-
-      <div class="tts-setting">
-
-        <label for="ttsRate">
-          वाचन गति
-        </label>
-
-        <div class="tts-rate-control">
-
-          <input
-            id="ttsRate"
-            type="range"
-            min="0.6"
-            max="1.2"
-            step="0.05"
-            value="0.9"
-            aria-label="संस्कृत वाचन गति"
-          >
-
-          <output
-            id="ttsRateValue"
-            for="ttsRate"
-          >
-            0.90
-          </output>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================================================
-         INDEX / ADMIN PANEL
-    ========================================================== -->
-
-    <section
-      id="indexPanel"
-      class="index-panel"
-      aria-labelledby="indexTitle"
-    >
-
-      <div class="index-panel-inner">
-
-        <h2 id="indexTitle">
-          Index Panel
-        </h2>
-
-        <p class="index-panel-description">
-          9:16 वीडियो क्लिप अपलोड करें। चयनित वीडियो वाचन की
-          पूरी अवधि तक दोहराया जाएगा और संपूर्ण पाठ व TTS
-          पूर्ण होने पर स्वतः रुक जाएगा।
-        </p>
-
-
-        <div class="upload-group">
-
-          <label
-            for="videoUpload"
-            class="upload-label"
-          >
-            9:16 वीडियो क्लिप
-          </label>
-
-
-          <input
-            id="videoUpload"
-            name="videoUpload"
-            type="file"
-            accept="video/mp4,video/webm,video/ogg,video/*"
-            aria-describedby="videoUploadHint"
-          >
-
-
-          <small
-            id="videoUploadHint"
-            class="upload-hint"
-          >
-            MP4 या WebM जैसे वीडियो प्रारूप का उपयोग करें।
-          </small>
-
-
-          <div
-            id="videoUploadStatus"
-            class="upload-status"
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            कोई वीडियो चयनित नहीं है।
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================================================
-         COMPLETION STATE
-    ========================================================== -->
-
-    <section
-      id="completionSection"
-      class="completion-section"
-      aria-labelledby="completionTitle"
-      aria-live="polite"
-      aria-atomic="true"
-    >
-
-      <h2
-        id="completionTitle"
-        class="section-title"
-      >
-        वाचन स्थिति
-      </h2>
-
-
-      <div class="completion-status-row">
-
-        <span
-          id="textCompletion"
-          class="completion-status"
-          data-complete="false"
-        >
-          पाठ: अपूर्ण
-        </span>
-
-
-        <span
-          id="ttsCompletion"
-          class="completion-status"
-          data-complete="false"
-        >
-          TTS: अपूर्ण
-        </span>
-
-
-        <span
-          id="completionGate"
-          class="completion-status"
-          data-complete="false"
-        >
-          वाचन जारी है
-        </span>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================================================
-         SYSTEM STATUS
-    ========================================================== -->
-
-    <section
-      id="systemStatusSection"
-      class="system-status-section"
-      aria-labelledby="systemStatusTitle"
-    >
-
-      <h2
-        id="systemStatusTitle"
-        class="section-title"
-      >
-        सिस्टम स्थिति
-      </h2>
-
-      <div
-        id="systemStatus"
-        class="system-status"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        App प्रारंभ हो रहा है…
-      </div>
-
-    </section>
-
-  </main>
-
-
-  <!-- =========================================================
-       NOSCRIPT
-  ========================================================== -->
-
-  <noscript>
-    <div class="noscript-message">
-      इस App को चलाने के लिए JavaScript सक्षम करना आवश्यक है।
-    </div>
-  </noscript>
-
-
-  <!-- =========================================================
-       APPLICATION SCRIPT
-  ========================================================== -->
-
-  <script
-    type="module"
-    src="./app.js"
-  ></script>
-
+<main id="app" data-source="data/lalita-sahasranama-ratnavali.json">
+<header><h1>श्रीललितासहस्रनाम स्तोत्र रत्नावली</h1></header>
+<section id="videoSection">
+<div class="video-container">
+<video id="videoPlayer" playsinline preload="metadata" loop aria-label="स्तोत्र वीडियो"></video>
+<div id="videoPlaceholder" aria-hidden="true">9:16</div>
+</div>
+<div id="videoStatus" role="status" aria-live="polite">वीडियो अपलोड करें।</div>
+</section>
+<section id="playbackControls" aria-label="प्लेबैक नियंत्रण">
+<button id="playButton" type="button">▶ चलाएँ</button>
+<button id="pauseButton" type="button">⏸ रोकें</button>
+<button id="stopButton" type="button">⏹ बंद करें</button>
+</section>
+<section id="textSection">
+<h2>संपूर्ण संस्कृत पाठ</h2>
+<div id="textContent" role="article"></div>
+<div id="currentSegment" aria-live="polite"></div>
+</section>
+<section id="progressSection">
+<label>पाठ <progress id="textProgress" max="100" value="0"></progress><output id="textProgressValue">0%</output></label>
+<label>TTS <progress id="ttsProgress" max="100" value="0"></progress><output id="ttsProgressValue">0%</output></label>
+</section>
+<section id="ttsSection">
+<h2>संस्कृत TTS</h2>
+<div id="ttsVoiceStatus" role="status" aria-live="polite">महिला संस्कृत voice खोजी जा रही है…</div>
+<label for="ttsRate">वाचन गति</label>
+<input id="ttsRate" type="range" min=".6" max="1.2" step=".05" value=".9">
+<output id="ttsRateValue">0.90</output>
+</section>
+<section id="indexPanel" class="index-panel">
+<div class="index-panel-inner">
+<h2>Index Panel</h2>
+<label for="videoUpload">9:16 वीडियो क्लिप</label>
+<input id="videoUpload" type="file" accept="video/mp4,video/webm,video/ogg,video/*">
+<div id="videoUploadStatus" role="status" aria-live="polite">कोई वीडियो चयनित नहीं है।</div>
+<button id="previewButton" type="button">वीडियो Preview</button>
+<button id="removeVideoButton" type="button">वीडियो हटाएँ</button>
+<button id="saveSettingsButton" type="button">सेटिंग सुरक्षित करें</button>
+<button id="resetButton" type="button">सब Reset करें</button>
+</div>
+</section>
+<section id="completionSection" aria-live="polite">
+<span id="textCompletion">पाठ: अपूर्ण</span>
+<span id="ttsCompletion">TTS: अपूर्ण</span>
+<span id="completionGate">वाचन जारी है</span>
+</section>
+<div id="systemStatus" role="status" aria-live="polite">App तैयार किया जा रहा है…</div>
+<script type="module">
+const $=id=>document.getElementById(id);
+const video=$('videoPlayer'),file=$('videoUpload'),textBox=$('textContent');
+let segments=[],index=0,playing=false,textDone=false,ttsDone=false,voice=null,objectUrl='';
+const status=s=>$('systemStatus').textContent=s;
+const gate=()=>{if(textDone&&ttsDone){video.pause();playing=false;$('completionGate').textContent='वाचन पूर्ण';}};
+function voices(){
+voice=speechSynthesis.getVoices().find(v=>(v.lang||'').toLowerCase().startsWith('sa')&&/female|woman|girl|स्त्री/i.test(v.name));
+$('ttsVoiceStatus').textContent=voice?`महिला संस्कृत voice: ${voice.name}`:'महिला संस्कृत voice उपलब्ध नहीं है; TTS प्रारंभ नहीं होगा।';
+}
+function render(){
+textBox.innerHTML='';
+segments.forEach((s,i)=>{const e=document.createElement('span');e.textContent=s.text+' ';e.id='seg-'+i;e.className='segment';textBox.append(e);});
+}
+async function loadText(){
+const r=await fetch(document.querySelector('#app').dataset.source);
+if(!r.ok)throw Error('JSON load failed');
+const d=await r.json();
+segments=d.segments||d.names||d.text||[];
+segments=segments.map((s,i)=>typeof s==='string'?{id:i+1,text:s}:{...s,id:s.id??i+1,text:s.text||s.name||''}).filter(s=>s.text);
+render();status(`${segments.length} पाठ-खंड लोड हुए।`);
+}
+function speak(){
+if(!playing)return;
+if(!voice){status('महिला संस्कृत voice उपलब्ध नहीं है।');return;}
+if(index>=segments.length){textDone=true;ttsDone=true;$('textCompletion').textContent='पाठ: पूर्ण';$('ttsCompletion').textContent='TTS: पूर्ण';gate();return;}
+const s=segments[index],u=new SpeechSynthesisUtterance(s.text);
+u.lang='sa-IN';u.rate=+$('ttsRate').value;u.voice=voice;
+document.querySelector('.active')?.classList.remove('active');
+$('seg-'+index)?.classList.add('active');$('currentSegment').textContent=s.text;
+$('ttsCompletion').textContent='TTS: जारी';
+u.onend=()=>{index++;const p=Math.round(index*100/segments.length);
+$('textProgress').value=p;$('ttsProgress').value=p;$('textProgressValue').value=p+'%';$('ttsProgressValue').value=p+'%';
+if(index>=segments.length){textDone=true;ttsDone=true;$('textCompletion').textContent='पाठ: पूर्ण';$('ttsCompletion').textContent='TTS: पूर्ण';gate();}else speak();};
+u.onerror=()=>status('TTS त्रुटि हुई।');
+speechSynthesis.speak(u);
+}
+function play(){
+if(!voice){status('महिला संस्कृत voice उपलब्ध न होने से वाचन प्रारंभ नहीं किया गया।');return;}
+if(!segments.length){status('पाठ उपलब्ध नहीं है।');return;}
+playing=true;textDone=false;ttsDone=false;if(speechSynthesis.paused){speechSynthesis.resume();if(video.src)video.play().catch(()=>{});status('वाचन पुनः जारी है।');return;}if(video.src)video.play().catch(()=>{});speak();status('वाचन चल रहा है।');
+}
+function pause(){
+playing=false;video.pause();speechSynthesis.pause();status('वाचन रोका गया।');
+}
+function stop(){
+playing=false;video.pause();speechSynthesis.cancel();index=0;textDone=false;ttsDone=false;
+$('textProgress').value=0;$('ttsProgress').value=0;$('textProgressValue').value='0%';$('ttsProgressValue').value='0%';
+$('textCompletion').textContent='पाठ: अपूर्ण';$('ttsCompletion').textContent='TTS: अपूर्ण';$('completionGate').textContent='वाचन जारी है';
+document.querySelector('.active')?.classList.remove('active');$('currentSegment').textContent='';status('वाचन प्रारंभिक स्थिति में लौट आया।');
+}
+file.onchange=()=>{
+const f=file.files[0];if(!f)return;
+if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(f);video.src=objectUrl;video.load();video.onloadedmetadata=()=>{const r=video.videoWidth/video.videoHeight;if(Math.abs(r-(9/16))>.03){URL.revokeObjectURL(objectUrl);objectUrl='';video.removeAttribute('src');video.load();file.value='';$('videoUploadStatus').textContent='अस्वीकृत: वीडियो 9:16 नहीं है।';$('videoPlaceholder').hidden=false;$('videoStatus').textContent='कृपया 9:16 वीडियो चुनें।';return;}$('videoPlaceholder').hidden=true;$('videoUploadStatus').textContent=`चयनित: ${f.name}`;$('videoStatus').textContent='9:16 वीडियो तैयार है।';};
+};
+$('previewButton').onclick=()=>{if(!video.src)return status('पहले वीडियो चुनें।');video.paused?video.play():video.pause();};
+$('removeVideoButton').onclick=()=>{stop();if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl='';video.removeAttribute('src');video.load();file.value='';$('videoPlaceholder').hidden=false;$('videoUploadStatus').textContent='कोई वीडियो चयनित नहीं है।';$('videoStatus').textContent='वीडियो हटाया गया।';};
+$('saveSettingsButton').onclick=()=>{localStorage.setItem('lalitaRate',$('ttsRate').value);status('सेटिंग सुरक्षित हो गई।');};
+$('resetButton').onclick=()=>{stop();localStorage.removeItem('lalitaRate');$('ttsRate').value='.9';$('ttsRateValue').textContent='0.90';status('सभी App settings reset हो गईं।');};
+$('playButton').onclick=play;$('pauseButton').onclick=pause;$('stopButton').onclick=stop;
+$('ttsRate').oninput=e=>$('ttsRateValue').textContent=(+e.target.value).toFixed(2);
+speechSynthesis.onvoiceschanged=voices;voices();
+$('ttsRate').value=localStorage.getItem('lalitaRate')||'.9';$('ttsRateValue').textContent=(+$('ttsRate').value).toFixed(2);
+loadText().catch(()=>status('Canonical JSON लोड नहीं हो सका।'));
+</script>
+</main>
 </body>
 </html>
