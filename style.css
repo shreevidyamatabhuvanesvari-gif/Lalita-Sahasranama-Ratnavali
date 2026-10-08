@@ -8,6 +8,7 @@
  *
  * Scope:
  *   - Unified single-page layout
+ *   - Desktop two-column composition with integrated Index Panel
  *   - Responsive design
  *   - Typography
  *   - Video presentation
@@ -58,8 +59,8 @@
   --radius-medium: 14px;
   --radius-large: 20px;
 
-  --content-width: 920px;
-  --index-width: 680px;
+  --content-width: 1180px;
+  --index-width: 360px;
   --video-width: 430px;
 
   --space-1: 0.35rem;
@@ -496,7 +497,7 @@ progress::-moz-progress-bar {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-large);
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-medium);
 }
 
 .index-panel-inner h2 {
@@ -721,6 +722,26 @@ label:focus-visible {
 
 
 /* =========================================================
+   TABLET / MOBILE
+   ========================================================= */
+
+@media (max-width: 1023px) {
+  #app {
+    width: min(calc(100% - 1.5rem), var(--content-width));
+    padding-block: var(--space-5);
+  }
+
+  .index-panel {
+    width: min(100%, 680px);
+  }
+
+  .index-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* =========================================================
    MOBILE — SMALL DEVICES
    ========================================================= */
 
@@ -852,51 +873,137 @@ label:focus-visible {
 
 
 /* =========================================================
-   TABLET
+   DESKTOP — INTEGRATED TWO-COLUMN COMPOSITION
    ========================================================= */
 
-@media (min-width: 481px) and (max-width: 900px) {
+@media (min-width: 1024px) {
   #app {
-    width: min(calc(100% - 1.5rem), var(--content-width));
-    padding-block: var(--space-5);
+    width: min(calc(100% - 2rem), var(--content-width));
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, var(--index-width));
+    grid-template-areas:
+      "header header"
+      "video panel"
+      "play panel"
+      "text text"
+      "progress progress"
+      "tts tts"
+      "completion completion"
+      "system system";
+    column-gap: var(--space-6);
+    row-gap: var(--space-5);
+    align-items: start;
   }
 
-  .index-panel {
-    width: min(100%, 680px);
+  .app-header {
+    grid-area: header;
+    width: 100%;
+    margin-bottom: 0;
   }
 
-  .index-actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .app-header h1 {
+    font-size: clamp(1.7rem, 2.6vw, 2.25rem);
   }
-}
 
-
-/* =========================================================
-   DESKTOP / LARGE SCREENS
-   ========================================================= */
-
-@media (min-width: 901px) {
-  #app {
-    padding-block: var(--space-6);
+  .app-header p {
+    max-width: 840px;
   }
 
   .video-section {
-    padding-bottom: var(--space-6);
+    grid-area: video;
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 0;
   }
 
-  .text-content {
-    max-height: 620px;
+  .video-container {
+    width: min(100%, 300px);
+  }
+
+  .video-status {
+    width: min(100%, 420px);
+  }
+
+  .playback-controls {
+    grid-area: play;
+    width: 100%;
+    margin-bottom: 0;
+    justify-content: center;
+  }
+
+  .playback-controls button {
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .index-panel {
-    width: min(100%, 680px);
+    grid-area: panel;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    margin: 0;
+    align-self: stretch;
+  }
+
+  .index-panel-inner {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .index-panel-description {
+    max-width: none;
   }
 
   .index-actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: auto;
+  }
+
+  .text-section {
+    grid-area: text;
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 0;
+  }
+
+  .text-content {
+    max-height: 42vh;
+  }
+
+  .progress-section {
+    grid-area: progress;
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .tts-section {
+    grid-area: tts;
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .completion-section {
+    grid-area: completion;
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .system-status-section {
+    grid-area: system;
+    width: 100%;
+    margin-bottom: 0;
   }
 }
 
+@media (min-width: 1280px) {
+  .video-container {
+    width: min(100%, 320px);
+  }
+}
 
 /* =========================================================
    PRINT
@@ -924,6 +1031,7 @@ label:focus-visible {
   }
 
   #app {
+    display: block;
     width: 100%;
     max-width: none;
     padding: 0;
