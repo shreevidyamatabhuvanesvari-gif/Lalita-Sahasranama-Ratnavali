@@ -1,5 +1,19 @@
 'use strict';
 
+/*
+ * Lalita Sahasranama Ratnavali
+ * app.js
+ *
+ * TTS प्राथमिकता:
+ * 1. पुरुष संस्कृत voice
+ * 2. पुरुष Hindi voice
+ * 3. Sanskrit/Hindi प्राकृतिक/Neural/Premium voice
+ *
+ * महत्वपूर्ण:
+ * Browser/Web Speech API स्वयं voice का gender हमेशा reliably expose नहीं करता।
+ * इसलिए male-selection descriptor/name आधारित scoring से किया गया है।
+ */
+
 const $ = id => document.getElementById(id);
 
 const app = $('app');
@@ -66,6 +80,8 @@ const state = {
   ttsDone: false,
 
   voice: null,
+  voiceKind: '',
+  voiceLanguage: '',
 
   objectUrl: '',
   videoReady: false,
@@ -80,240 +96,24 @@ const state = {
 
 
 /* =========================================================
-   Male Sanskrit Voice Selection
-   ========================================================= */
-
-const MALE_MARKERS = [
-  'male',
-  'man',
-  'boy',
-  'gent',
-  'gentleman',
-  'masculine',
-  'पुरुष',
-  'नर',
-  'पु',
-  'male voice'
-];
-
-const FEMALE_MARKERS = [
-  'female',
-  'woman',
-  'girl',
-  'lady',
-  'स्त्री',
-  'महिला',
-  'nari',
-  'नारी'
-];
-
-const NATURAL_MARKERS = [
-  'natural',
-  'neural',
-  'premium',
-  'enhanced',
-  'wavenet',
-  'studio',
-  'expressive',
-  'hq',
-  'high quality',
-  'google',
-  'microsoft',
-  'amazon',
-  'apple'
-];
-
-function descriptorOf(voice) {
-  return (
-    `${voice?.name || ''} ` +
-    `${voice?.voiceURI || ''} ` +
-    `${voice?.lang || ''}`
-  ).toLowerCase();
-}
-
-function hasMarker(text, markers) {
-  return markers.some(marker =>
-    text.includes(
-      String(marker).toLowerCase()
-    )
-  );
-}
-
-function isFemaleVoice(voice) {
-  return hasMarker(
-    descriptorOf(voice),
-    FEMALE_MARKERS
-  );
-}
-
-function isMaleVoice(voice) {
-  return hasMarker(
-    descriptorOf(voice),
-    MALE_MARKERS
-  );
-}
-
-function isSanskritVoice(voice) {
-  const lang =
-    String(
-      voice?.lang || ''
-    ).toLowerCase();
-
-  const descriptor =
-    descriptorOf(voice);
-
-  return (
-    lang === 'sa' ||
-    lang.startsWith('sa-') ||
-    descriptor.includes('sanskrit') ||
-    descriptor.includes('संस्कृत')
-  );
-}
-
-function isHindiVoice(voice) {
-  const lang =
-    String(
-      voice?.lang || ''
-    ).toLowerCase();
-
-  return (
-    lang === 'hi' ||
-    lang.startsWith('hi-')
-  );
-}
-
-function isNaturalVoice(voice) {
-  return hasMarker(
-    descriptorOf(voice),
-    NATURAL_MARKERS
-  );
-}
-
-function maleVoiceScore(voice) {
-  if (!voice) {
-    return -Infinity;
-  }
-
-  /*
-   * स्पष्ट महिला voice को कभी प्राथमिक candidate
-   * न बनाया जाए।
-   */
-  if (isFemaleVoice(voice)) {
-    return -Infinity;
-  }
-
-  let score = 0;
-
-  /*
-   * पुरुष संकेत को सबसे अधिक प्राथमिकता।
-   */
-  if (isMaleVoice(voice)) {
-    score += 180;
-  }
-
-  /*
-   * संस्कृत सर्वोच्च भाषा प्राथमिकता।
-   */
-  if (isSanskritVoice(voice)) {
-    score += 140;
-  }
-
-  /*
-   * Hindi को fallback भाषा के रूप में रखें।
-   */
-  if (isHindiVoice(voice)) {
-    score += 90;
-  }
-
-  /*
-   * Natural / Neural / Premium voice को अतिरिक्त
-   * प्राथमिकता।
-   */
-  if (isNaturalVoice(voice)) {
-    score += 35;
-  }
-
-  if (voice.default) {
-    score += 4;
-  }
-
-  /*
-   * Sanskrit या Hindi से संबंधित voice को ही वास्तविक
-   * candidate मानें।
-   */
-  if (
-    !isSanskritVoice(voice) &&
-    !isHindiVoice(voice)
-  ) {
-    return -Infinity;
-  }
-
-  return score;
-}
-
-function selectMaleSanskritVoice() {
-  const synth = speech();
-
-  if (!synth) {
-    return null;
-  }
-
-  const voices =
-    synth
-      .getVoices()
-      .filter(Boolean);
-
-  if (!voices.length) {
-    return null;
-  }
-
-  /*
-   * पहले स्पष्ट पुरुष voices।
-   */
-  const candidates =
-    voices
-      .map(voice => ({
-        voice,
-        score: maleVoiceScore(voice)
-      }))
-      .filter(
-        item =>
-          Number.isFinite(item.score)
-      )
-      .sort(
-        (a, b) =>
-          b.score - a.score
-      );
-
-  return (
-    candidates[0]?.voice ||
-    null
-  );
-}
-
-
-/* =========================================================
-   Basic Messages
+   संदेश
    ========================================================= */
 
 function msg(text) {
   if (system) {
-    system.textContent =
-      String(text || '');
+    system.textContent = String(text || '');
   }
 }
 
 function vmsg(text) {
   if (videoStatus) {
-    videoStatus.textContent =
-      String(text || '');
+    videoStatus.textContent = String(text || '');
   }
 }
 
 function umsg(text) {
   if (uploadStatus) {
-    uploadStatus.textContent =
-      String(text || '');
+    uploadStatus.textContent = String(text || '');
   }
 }
 
@@ -323,12 +123,11 @@ function speech() {
 
 
 /* =========================================================
-   TTS Rate
+   TTS गति
    ========================================================= */
 
 function clampRate(value) {
-  const numeric =
-    Number(value);
+  const numeric = Number(value);
 
   if (!Number.isFinite(numeric)) {
     return 0.86;
@@ -345,14 +144,10 @@ function updateRate() {
     return;
   }
 
-  const value =
-    clampRate(rate.value);
+  const value = clampRate(rate.value);
 
-  rate.value =
-    String(value);
-
-  rateValue.textContent =
-    value.toFixed(2);
+  rate.value = String(value);
+  rateValue.textContent = value.toFixed(2);
 }
 
 
@@ -361,9 +156,7 @@ function updateRate() {
    ========================================================= */
 
 function setPlaybackState(nextState) {
-  state.playbackState =
-    nextState;
-
+  state.playbackState = nextState;
   updateControlState();
 }
 
@@ -373,35 +166,30 @@ function updateControlState() {
       !state.dataReady ||
       !state.videoReady ||
       state.previewing ||
-      state.playbackState ===
-        PLAYBACK_STATES.PLAYING;
+      state.playbackState === PLAYBACK_STATES.PLAYING;
   }
 
   if (pauseBtn) {
     pauseBtn.disabled =
-      state.playbackState !==
-      PLAYBACK_STATES.PLAYING;
+      state.playbackState !== PLAYBACK_STATES.PLAYING;
   }
 
   if (stopBtn) {
     stopBtn.disabled =
       !state.dataReady &&
       !state.videoReady &&
-      state.playbackState ===
-        PLAYBACK_STATES.IDLE &&
+      state.playbackState === PLAYBACK_STATES.IDLE &&
       !state.previewing;
   }
 
   if (previewBtn) {
     previewBtn.disabled =
       !state.videoReady ||
-      state.playbackState !==
-        PLAYBACK_STATES.IDLE;
+      state.playbackState !== PLAYBACK_STATES.IDLE;
 
-    previewBtn.textContent =
-      state.previewing
-        ? 'Preview रोकें'
-        : 'वीडियो Preview';
+    previewBtn.textContent = state.previewing
+      ? 'Preview रोकें'
+      : 'वीडियो Preview';
   }
 }
 
@@ -411,58 +199,40 @@ function updateControlState() {
    ========================================================= */
 
 function setTextProgress(percent) {
-  const numeric =
-    Number(percent);
+  const numeric = Number(percent);
 
   const safe =
     Number.isFinite(numeric)
-      ? Math.max(
-          0,
-          Math.min(
-            100,
-            numeric
-          )
-        )
+      ? Math.max(0, Math.min(100, numeric))
       : 0;
 
-  const value =
-    Math.round(safe);
+  const value = Math.round(safe);
 
   if (textBar) {
     textBar.value = value;
   }
 
   if (textPct) {
-    textPct.value =
-      `${value}%`;
+    textPct.value = `${value}%`;
   }
 }
 
 function setTtsProgress(percent) {
-  const numeric =
-    Number(percent);
+  const numeric = Number(percent);
 
   const safe =
     Number.isFinite(numeric)
-      ? Math.max(
-          0,
-          Math.min(
-            100,
-            numeric
-          )
-        )
+      ? Math.max(0, Math.min(100, numeric))
       : 0;
 
-  const value =
-    Math.round(safe);
+  const value = Math.round(safe);
 
   if (ttsBar) {
     ttsBar.value = value;
   }
 
   if (ttsPct) {
-    ttsPct.value =
-      `${value}%`;
+    ttsPct.value = `${value}%`;
   }
 }
 
@@ -473,21 +243,16 @@ function resetProgress() {
 
 
 /* =========================================================
-   Completion
+   Completion State
    ========================================================= */
 
-function setCompletionState(
-  type,
-  value
-) {
+function setCompletionState(type, value) {
   if (type === 'text') {
-    state.textDone =
-      Boolean(value);
+    state.textDone = Boolean(value);
   }
 
   if (type === 'tts') {
-    state.ttsDone =
-      Boolean(value);
+    state.ttsDone = Boolean(value);
   }
 
   if (textDoneEl) {
@@ -534,42 +299,28 @@ function resetCompletionState() {
   state.ttsDone = false;
 
   if (textDoneEl) {
-    textDoneEl.textContent =
-      'पाठ: अपूर्ण';
-
-    textDoneEl.dataset.complete =
-      'false';
+    textDoneEl.textContent = 'पाठ: अपूर्ण';
+    textDoneEl.dataset.complete = 'false';
   }
 
   if (ttsDoneEl) {
-    ttsDoneEl.textContent =
-      'TTS: अपूर्ण';
-
-    ttsDoneEl.dataset.complete =
-      'false';
+    ttsDoneEl.textContent = 'TTS: अपूर्ण';
+    ttsDoneEl.dataset.complete = 'false';
   }
 
   if (gateEl) {
-    gateEl.textContent =
-      'वाचन जारी है';
-
-    gateEl.dataset.complete =
-      'false';
+    gateEl.textContent = 'वाचन जारी है';
+    gateEl.dataset.complete = 'false';
   }
 }
 
 function finish() {
-  if (
-    !state.textDone ||
-    !state.ttsDone
-  ) {
+  if (!state.textDone || !state.ttsDone) {
     return false;
   }
 
   state.speechActive = false;
-  state.index =
-    state.segments.length;
-
+  state.index = state.segments.length;
   state.previewing = false;
 
   video?.pause();
@@ -580,7 +331,7 @@ function finish() {
 
   if (
     current &&
-    state.segments.length
+    state.segments.length > 0
   ) {
     current.textContent =
       state.segments[
@@ -597,25 +348,21 @@ function finish() {
     'संपूर्ण पाठ और TTS पूर्ण — वीडियो रुक गया।'
   );
 
-  msg(
-    'वाचन पूर्ण हुआ।'
-  );
+  msg('वाचन पूर्ण हुआ।');
 
   return true;
 }
 
 
 /* =========================================================
-   Text Data
+   Text Rendering
    ========================================================= */
 
 function clearActive() {
   textBox?.querySelectorAll(
     '.segment.active'
   ).forEach(node => {
-    node.classList.remove(
-      'active'
-    );
+    node.classList.remove('active');
   });
 }
 
@@ -632,15 +379,11 @@ function renderText() {
   state.segments.forEach(
     (segment, index) => {
       const node =
-        document.createElement(
-          'span'
-        );
+        document.createElement('span');
 
-      node.className =
-        'segment';
+      node.className = 'segment';
 
-      node.id =
-        `seg-${index}`;
+      node.id = `seg-${index}`;
 
       node.dataset.index =
         String(index);
@@ -652,41 +395,40 @@ function renderText() {
     }
   );
 
-  textBox.append(
-    fragment
-  );
+  textBox.append(fragment);
 }
 
-function normalize(
-  item,
-  index
-) {
-  if (typeof item === 'string') {
-    const text =
-      item.trim();
 
-    return text
-      ? {
-          id: index + 1,
-          text
-        }
-      : null;
+/* =========================================================
+   JSON Normalization
+   ========================================================= */
+
+function normalize(item, index) {
+  if (typeof item === 'string') {
+    const text = item.trim();
+
+    if (!text) {
+      return null;
+    }
+
+    return {
+      id: index + 1,
+      text
+    };
   }
 
   if (
     !item ||
-    typeof item !==
-      'object'
+    typeof item !== 'object'
   ) {
     return null;
   }
 
-  const text =
-    String(
-      item.text ??
-      item.name ??
-      ''
-    ).trim();
+  const text = String(
+    item.text ??
+    item.name ??
+    ''
+  ).trim();
 
   if (!text) {
     return null;
@@ -703,6 +445,20 @@ function normalize(
 }
 
 function extract(data) {
+  /*
+   * Canonical JSON compatibility:
+   *
+   * segments  = stotra segments
+   * namavali  = 1000-name namavali
+   * names
+   * entries
+   * ratnavali
+   * text
+   *
+   * इस application में segments को प्राथमिकता दी गई है,
+   * क्योंकि वर्तमान Lalita UI का text/TTS stream segments पर आधारित है।
+   */
+
   let list;
 
   if (Array.isArray(data)) {
@@ -729,14 +485,16 @@ function extract(data) {
     .filter(Boolean);
 }
 
+
+/* =========================================================
+   Load JSON
+   ========================================================= */
+
 async function loadText() {
   const response =
-    await fetch(
-      source,
-      {
-        cache: 'no-store'
-      }
-    );
+    await fetch(source, {
+      cache: 'no-store'
+    });
 
   if (!response.ok) {
     throw new Error(
@@ -744,10 +502,11 @@ async function loadText() {
     );
   }
 
+  const data =
+    await response.json();
+
   state.segments =
-    extract(
-      await response.json()
-    );
+    extract(data);
 
   if (!state.segments.length) {
     throw new Error(
@@ -781,14 +540,218 @@ async function loadText() {
 
 
 /* =========================================================
-   Voice Refresh
+   Voice Detection
    ========================================================= */
 
-function refreshVoice(
-  { announce = true } = {}
-) {
-  const synth =
-    speech();
+/*
+ * Browser speech API में voice gender standardized property
+ * उपलब्ध नहीं होती। इसलिए name / URI / descriptor के आधार
+ * पर एक व्यावहारिक scoring system बनाया गया है।
+ */
+
+const FEMALE_MARKERS = [
+  'female',
+  'woman',
+  'girl',
+  'lady',
+  'स्त्री',
+  'महिला',
+  'nari',
+  'नारी'
+];
+
+const MALE_MARKERS = [
+  'male',
+  'man',
+  'boy',
+  'gentleman',
+  'पुरुष',
+  'नर',
+  'male voice'
+];
+
+const NATURAL_MARKERS = [
+  'natural',
+  'neural',
+  'premium',
+  'enhanced',
+  'wavenet',
+  'studio',
+  'expressive',
+  'hq',
+  'high quality',
+  'google',
+  'microsoft',
+  'amazon',
+  'apple'
+];
+
+function descriptorOf(voice) {
+  return (
+    `${voice?.name || ''} ` +
+    `${voice?.voiceURI || ''} ` +
+    `${voice?.lang || ''}`
+  ).toLowerCase();
+}
+
+function hasAnyMarker(text, markers) {
+  return markers.some(
+    marker =>
+      text.includes(
+        String(marker).toLowerCase()
+      )
+  );
+}
+
+function languageScore(voice) {
+  const lang =
+    String(
+      voice?.lang || ''
+    ).toLowerCase();
+
+  if (
+    lang === 'sa' ||
+    lang.startsWith('sa-')
+  ) {
+    return 100;
+  }
+
+  if (
+    lang === 'hi' ||
+    lang.startsWith('hi-')
+  ) {
+    return 85;
+  }
+
+  return 0;
+}
+
+function isIndianLanguageVoice(voice) {
+  const lang =
+    String(
+      voice?.lang || ''
+    ).toLowerCase();
+
+  return (
+    lang === 'sa' ||
+    lang.startsWith('sa-') ||
+    lang === 'hi' ||
+    lang.startsWith('hi-')
+  );
+}
+
+function looksFemale(voice) {
+  return hasAnyMarker(
+    descriptorOf(voice),
+    FEMALE_MARKERS
+  );
+}
+
+function looksMale(voice) {
+  return hasAnyMarker(
+    descriptorOf(voice),
+    MALE_MARKERS
+  );
+}
+
+function looksNatural(voice) {
+  return hasAnyMarker(
+    descriptorOf(voice),
+    NATURAL_MARKERS
+  );
+}
+
+function scoreVoice(voice) {
+  if (!voice) {
+    return -Infinity;
+  }
+
+  const descriptor =
+    descriptorOf(voice);
+
+  const language =
+    languageScore(voice);
+
+  /*
+   * भारतीय भाषाओं को प्राथमिकता।
+   */
+  let score = language;
+
+  if (language === 0) {
+    return -Infinity;
+  }
+
+  /*
+   * महिला-चिह्नित voices को male selection से बाहर रखें।
+   */
+  if (looksFemale(voice)) {
+    return -Infinity;
+  }
+
+  /*
+   * Explicit male marker को बहुत अधिक प्राथमिकता।
+   */
+  if (looksMale(voice)) {
+    score += 100;
+  }
+
+  /*
+   * Natural / Neural / Premium voices
+   * मधुर एवं प्राकृतिक rendering के लिए प्राथमिक।
+   */
+  if (looksNatural(voice)) {
+    score += 35;
+  }
+
+  /*
+   * Default / local voices को हल्की प्राथमिकता।
+   */
+  if (voice.default) {
+    score += 4;
+  }
+
+  /*
+   * Sanskrit की अतिरिक्त preference।
+   */
+  if (
+    descriptor.includes('sanskrit') ||
+    descriptor.includes('संस्कृत')
+  ) {
+    score += 40;
+  }
+
+  return score;
+}
+
+function classifyVoice(voice) {
+  if (!voice) {
+    return '';
+  }
+
+  const language =
+    String(
+      voice.lang || ''
+    ).toLowerCase();
+
+  if (
+    language === 'sa' ||
+    language.startsWith('sa-')
+  ) {
+    return 'male-sanskrit';
+  }
+
+  if (
+    language === 'hi' ||
+    language.startsWith('hi-')
+  ) {
+    return 'male-hindi';
+  }
+
+  return 'fallback';
+}
+
+function selectMaleVoice() {
+  const synth = speech();
 
   if (!synth) {
     return null;
@@ -799,52 +762,125 @@ function refreshVoice(
       .getVoices()
       .filter(Boolean);
 
-  /*
-   * Browser पहली call पर voice-list खाली दे सकता है।
-   * यह failure नहीं है; voiceschanged इसे बाद में ठीक करेगा।
-   */
   if (!voices.length) {
     return null;
   }
 
+  const indianVoices =
+    voices.filter(
+      isIndianLanguageVoice
+    );
+
   /*
-   * पहले से चयनित male voice उपलब्ध है तो उसे बनाए रखें।
+   * पहले भारतीय language voices पर काम करें।
    */
-  if (
-    state.voice &&
-    voices.some(
-      voice =>
-        voice.voiceURI ===
-        state.voice.voiceURI
-    )
-  ) {
-    return state.voice;
+  const candidates =
+    indianVoices.length
+      ? indianVoices
+      : voices;
+
+  const scored =
+    candidates
+      .map(voice => ({
+        voice,
+        score: scoreVoice(voice)
+      }))
+      .filter(
+        item =>
+          Number.isFinite(item.score)
+      )
+      .sort(
+        (a, b) =>
+          b.score - a.score
+      );
+
+  if (scored.length) {
+    return scored[0].voice;
+  }
+
+  /*
+   * यदि browser gender descriptor बिल्कुल नहीं देता,
+   * तब Sanskrit/Hindi natural voice को fallback के रूप
+   * में चुनें, लेकिन महिला-marked voices को नहीं।
+   */
+
+  const fallback =
+    candidates
+      .filter(
+        voice => !looksFemale(voice)
+      )
+      .sort(
+        (a, b) => {
+          const sa =
+            languageScore(a) +
+            (looksNatural(a) ? 25 : 0);
+
+          const sb =
+            languageScore(b) +
+            (looksNatural(b) ? 25 : 0);
+
+          return sb - sa;
+        }
+      )[0];
+
+  return fallback || null;
+}
+
+function refreshVoice() {
+  const synth = speech();
+
+  if (!synth) {
+    return;
   }
 
   const selected =
-    selectMaleSanskritVoice();
+    selectMaleVoice();
 
   state.voice =
     selected || null;
 
-  if (!voiceStatus || !announce) {
-    return state.voice;
+  state.voiceKind =
+    classifyVoice(
+      state.voice
+    );
+
+  state.voiceLanguage =
+    state.voice?.lang ||
+    '';
+
+  if (!voiceStatus) {
+    return;
   }
 
-  if (state.voice) {
+  if (!state.voice) {
     voiceStatus.textContent =
-      `पुरुष संस्कृत TTS: ${state.voice.name} (${state.voice.lang})`;
+      'उपयुक्त पुरुष Sanskrit/Hindi voice उपलब्ध नहीं है।';
+    return;
+  }
+
+  const voiceName =
+    state.voice.name ||
+    'System voice';
+
+  const lang =
+    state.voice.lang ||
+    'unknown';
+
+  const maleConfirmed =
+    looksMale(state.voice);
+
+  if (maleConfirmed) {
+    voiceStatus.textContent =
+      `पुरुष मधुर TTS: ${voiceName} (${lang})`;
   } else {
     voiceStatus.textContent =
-      'उपयुक्त पुरुष Sanskrit/Hindi voice अभी उपलब्ध नहीं मिली।';
+      `उपलब्ध natural भारतीय voice: ${voiceName} (${lang})`;
   }
-
-  return state.voice;
 }
 
 
 /* =========================================================
-   Text Highlight
+   Motion
    ========================================================= */
 
 function reducedMotion() {
@@ -854,6 +890,11 @@ function reducedMotion() {
     ).matches
   );
 }
+
+
+/* =========================================================
+   Highlight
+   ========================================================= */
 
 function highlight(index) {
   clearActive();
@@ -868,9 +909,7 @@ function highlight(index) {
     return;
   }
 
-  node.classList.add(
-    'active'
-  );
+  node.classList.add('active');
 
   try {
     node.scrollIntoView({
@@ -878,11 +917,10 @@ function highlight(index) {
         reducedMotion()
           ? 'auto'
           : 'smooth',
-
       block: 'center'
     });
-  } catch (_) {
-    /* No-op */
+  } catch (error) {
+    /* Browser without smooth scrolling support. */
   }
 
   if (current) {
@@ -893,12 +931,10 @@ function highlight(index) {
 
 
 /* =========================================================
-   Traversal
+   Text Traversal
    ========================================================= */
 
-function updateTextTraversal(
-  index
-) {
+function updateTextTraversal(index) {
   if (
     !state.segments.length ||
     index < 0
@@ -930,6 +966,11 @@ function updateTextTraversal(
     );
   }
 }
+
+
+/* =========================================================
+   TTS Progress
+   ========================================================= */
 
 function updateTtsProgress(
   completedSegments
@@ -968,12 +1009,10 @@ function updateTtsProgress(
 
 
 /* =========================================================
-   TTS Utterance
+   TTS भाषा
    ========================================================= */
 
-function utteranceLanguage(
-  voice
-) {
+function voiceLanguage(voice) {
   const lang =
     String(
       voice?.lang || ''
@@ -983,18 +1022,23 @@ function utteranceLanguage(
     lang === 'sa' ||
     lang.startsWith('sa-')
   ) {
-    return voice.lang;
+    return 'sa-IN';
   }
 
   if (
     lang === 'hi' ||
     lang.startsWith('hi-')
   ) {
-    return voice.lang;
+    return 'hi-IN';
   }
 
-  return 'sa-IN';
+  return 'hi-IN';
 }
+
+
+/* =========================================================
+   Utterance
+   ========================================================= */
 
 function makeUtterance(
   text,
@@ -1005,18 +1049,31 @@ function makeUtterance(
       text
     );
 
+  /*
+   * Voice-selected language को प्राथमिकता।
+   */
   utterance.lang =
-    utteranceLanguage(
+    voiceLanguage(
       state.voice
     );
 
+  /*
+   * मधुर और शांत वाचन के लिए
+   * default speed थोड़ी कम रखी गई है।
+   */
   utterance.rate =
     clampRate(
       rate?.value
     );
 
-  utterance.pitch = 1;
-  utterance.volume = 1;
+  /*
+   * पुरुष voice की natural timbre को
+   * pitch=1 पर रहने दिया गया है।
+   * Pitch से gender force नहीं किया जाता।
+   */
+  utterance.pitch = 1.0;
+
+  utterance.volume = 1.0;
 
   if (state.voice) {
     utterance.voice =
@@ -1025,14 +1082,12 @@ function makeUtterance(
 
   utterance.onstart = () => {
     if (
-      token !==
-      state.speechToken
+      token !== state.speechToken
     ) {
       return;
     }
 
-    state.speechActive =
-      true;
+    state.speechActive = true;
 
     if (ttsStatus) {
       ttsStatus.textContent =
@@ -1042,14 +1097,12 @@ function makeUtterance(
 
   utterance.onend = () => {
     if (
-      token !==
-      state.speechToken
+      token !== state.speechToken
     ) {
       return;
     }
 
-    state.speechActive =
-      false;
+    state.speechActive = false;
 
     const completedIndex =
       state.index;
@@ -1082,6 +1135,12 @@ function makeUtterance(
     state.index =
       completedIndex + 1;
 
+    /*
+     * महत्वपूर्ण:
+     * अगले segment से पहले synth.cancel()
+     * नहीं किया जाता, क्योंकि इससे कभी-कभी
+     * browser "interrupted" error देता है।
+     */
     if (
       state.playbackState ===
       PLAYBACK_STATES.PLAYING
@@ -1099,12 +1158,14 @@ function makeUtterance(
         return;
       }
 
-      state.speechActive =
-        false;
+      state.speechActive = false;
 
+      /*
+       * pause के दौरान browser के benign
+       * interruption को fatal error न मानें।
+       */
       if (
-        event?.error ===
-        'interrupted'
+        event?.error === 'interrupted'
       ) {
         return;
       }
@@ -1125,7 +1186,7 @@ function makeUtterance(
       );
 
       msg(
-        'TTS segment पूरा नहीं हो सका। वाचन paused है।'
+        'TTS segment पूरा नहीं हो सका। वाचन paused स्थिति में है।'
       );
     };
 
@@ -1134,12 +1195,11 @@ function makeUtterance(
 
 
 /* =========================================================
-   Speak
+   Speak Current Segment
    ========================================================= */
 
 function speakCurrentSegment() {
-  const synth =
-    speech();
+  const synth = speech();
 
   if (
     !synth ||
@@ -1149,13 +1209,10 @@ function speakCurrentSegment() {
     return false;
   }
 
-  refreshVoice({
-    announce: true
-  });
+  refreshVoice();
 
   if (!state.voice) {
-    state.speechActive =
-      false;
+    state.speechActive = false;
 
     video?.pause();
 
@@ -1165,11 +1222,11 @@ function speakCurrentSegment() {
 
     if (ttsStatus) {
       ttsStatus.textContent =
-        'उपयुक्त पुरुष Sanskrit/Hindi TTS voice चयनित नहीं हो सकी।';
+        'पुरुष Sanskrit/Hindi voice उपलब्ध नहीं है।';
     }
 
     msg(
-      'पुरुष TTS voice चयनित नहीं हो सकी।'
+      'उपलब्ध voice में उपयुक्त पुरुष Sanskrit/Hindi voice नहीं मिला।'
     );
 
     return false;
@@ -1193,12 +1250,19 @@ function speakCurrentSegment() {
     ];
 
   if (!item?.text) {
-    return false;
+    state.index += 1;
+
+    if (
+      state.index <
+      state.segments.length
+    ) {
+      speakCurrentSegment();
+    }
+
+    return true;
   }
 
-  highlight(
-    state.index
-  );
+  highlight(state.index);
 
   updateTextTraversal(
     state.index
@@ -1213,8 +1277,7 @@ function speakCurrentSegment() {
       token
     );
 
-  state.speechActive =
-    true;
+  state.speechActive = true;
 
   try {
     synth.speak(
@@ -1222,15 +1285,19 @@ function speakCurrentSegment() {
     );
 
     return true;
-  } catch (_) {
-    state.speechActive =
-      false;
+  } catch (error) {
+    state.speechActive = false;
 
     video?.pause();
 
     setPlaybackState(
       PLAYBACK_STATES.PAUSED
     );
+
+    if (ttsStatus) {
+      ttsStatus.textContent =
+        'TTS प्रारंभ नहीं हो सका।';
+    }
 
     msg(
       'Browser ने TTS प्रारंभ करने से मना कर दिया।'
@@ -1242,7 +1309,7 @@ function speakCurrentSegment() {
 
 
 /* =========================================================
-   Start / Resume / Play
+   Fresh Playback
    ========================================================= */
 
 async function startFreshPlayback() {
@@ -1257,26 +1324,28 @@ async function startFreshPlayback() {
     return false;
   }
 
-  refreshVoice({
-    announce: true
-  });
+  refreshVoice();
 
   if (!state.voice) {
     if (ttsStatus) {
       ttsStatus.textContent =
-        'उपयुक्त पुरुष Sanskrit/Hindi TTS voice चयनित नहीं हो सकी।';
+        'पुरुष Sanskrit/Hindi voice उपलब्ध नहीं है।';
     }
 
     msg(
-      'पुरुष TTS voice चयनित नहीं हो सकी।'
+      'TTS के लिए उपयुक्त पुरुष voice उपलब्ध नहीं है।'
     );
 
     return false;
   }
 
+  /*
+   * नया playback शुरू करते समय ही cancel किया जाता है।
+   */
   synth.cancel();
 
   state.speechToken += 1;
+
   state.speechActive = false;
   state.previewing = false;
 
@@ -1298,7 +1367,7 @@ async function startFreshPlayback() {
 
   try {
     await video.play();
-  } catch (_) {
+  } catch (error) {
     setPlaybackState(
       PLAYBACK_STATES.IDLE
     );
@@ -1328,7 +1397,7 @@ async function startFreshPlayback() {
   }
 
   vmsg(
-    'वीडियो और पुरुष संस्कृत TTS वाचन चल रहा है।'
+    'वीडियो और मधुर पुरुष TTS वाचन चल रहा है।'
   );
 
   msg(
@@ -1337,6 +1406,11 @@ async function startFreshPlayback() {
 
   return true;
 }
+
+
+/* =========================================================
+   Resume
+   ========================================================= */
 
 async function resumePlayback() {
   const synth =
@@ -1350,13 +1424,11 @@ async function resumePlayback() {
     return false;
   }
 
-  refreshVoice({
-    announce: true
-  });
+  refreshVoice();
 
   if (!state.voice) {
     msg(
-      'पुरुष TTS voice चयनित नहीं हो सकी।'
+      'पुरुष Sanskrit/Hindi voice उपलब्ध नहीं है।'
     );
 
     return false;
@@ -1364,7 +1436,7 @@ async function resumePlayback() {
 
   try {
     await video.play();
-  } catch (_) {
+  } catch (error) {
     msg(
       'वीडियो playback पुनः प्रारंभ नहीं हो सका।'
     );
@@ -1376,6 +1448,11 @@ async function resumePlayback() {
     PLAYBACK_STATES.PLAYING
   );
 
+  /*
+   * Browser paused speech को resume करें।
+   * यदि speech object समाप्त हो चुका है,
+   * तो वर्तमान segment से पुनः बोलें।
+   */
   if (synth.paused) {
     synth.resume();
   } else if (!synth.speaking) {
@@ -1383,7 +1460,7 @@ async function resumePlayback() {
   }
 
   vmsg(
-    'वीडियो और पुरुष TTS पुनः चल रहे हैं।'
+    'वीडियो और TTS पुनः चल रहे हैं।'
   );
 
   msg(
@@ -1392,6 +1469,11 @@ async function resumePlayback() {
 
   return true;
 }
+
+
+/* =========================================================
+   Play
+   ========================================================= */
 
 async function play() {
   if (!state.dataReady) {
@@ -1438,10 +1520,13 @@ async function play() {
 
 
 /* =========================================================
-   Pause / Stop
+   Pause
    ========================================================= */
 
 function pausePlayback() {
+  const synth =
+    speech();
+
   if (
     state.playbackState !==
     PLAYBACK_STATES.PLAYING
@@ -1454,7 +1539,12 @@ function pausePlayback() {
   }
 
   video?.pause();
-  speech()?.pause();
+
+  /*
+   * Pause करें, cancel नहीं।
+   * इससे Resume पर वही utterance जारी रह सकता है।
+   */
+  synth?.pause();
 
   setPlaybackState(
     PLAYBACK_STATES.PAUSED
@@ -1470,19 +1560,34 @@ function pausePlayback() {
   );
 
   msg(
-    'वाचन paused है।'
+    'वाचन रोककर paused स्थिति में रखा गया है।'
   );
 }
 
+
+/* =========================================================
+   Stop
+   ========================================================= */
+
 function stop(options = {}) {
   const silent =
-    Boolean(options.silent);
+    Boolean(
+      options.silent
+    );
 
+  const synth =
+    speech();
+
+  /*
+   * cancel केवल explicit Stop,
+   * नई playback और cleanup पर।
+   */
   state.speechToken += 1;
+
   state.speechActive = false;
   state.previewing = false;
 
-  speech()?.cancel();
+  synth?.cancel();
 
   video?.pause();
 
@@ -1495,6 +1600,7 @@ function stop(options = {}) {
   state.ttsCompleted = 0;
 
   clearActive();
+
   resetCompletionState();
   resetProgress();
 
@@ -1554,11 +1660,19 @@ async function handleVideoEnded() {
     return;
   }
 
+  if (!video) {
+    return;
+  }
+
   video.currentTime = 0;
 
   try {
     await video.play();
-  } catch (_) {
+  } catch (error) {
+    state.speechToken += 1;
+
+    state.speechActive = false;
+
     speech()?.pause();
 
     video.pause();
@@ -1579,7 +1693,7 @@ async function handleVideoEnded() {
 
 
 /* =========================================================
-   Video Upload
+   Video Management
    ========================================================= */
 
 function clearVideo() {
@@ -1618,13 +1732,13 @@ function validRatio() {
     return false;
   }
 
+  const ratio =
+    video.videoWidth /
+    video.videoHeight;
+
   return (
     Math.abs(
-      (
-        video.videoWidth /
-        video.videoHeight
-      ) -
-      9 / 16
+      ratio - 9 / 16
     ) <= 0.03
   );
 }
@@ -1683,9 +1797,7 @@ function fileAllowed(file) {
   return Boolean(
     file &&
     typeof file.type === 'string' &&
-    file.type.startsWith(
-      'video/'
-    )
+    file.type.startsWith('video/')
   );
 }
 
@@ -1714,15 +1826,19 @@ function selectVideo(event) {
   clearVideo();
 
   state.objectUrl =
-    URL.createObjectURL(
-      file
-    );
+    URL.createObjectURL(file);
+
+  if (!video) {
+    return;
+  }
 
   video.src =
     state.objectUrl;
 
   video.loop = false;
-  video.preload = 'metadata';
+
+  video.preload =
+    'metadata';
 
   video.onloadedmetadata =
     () => {
@@ -1784,14 +1900,16 @@ async function preview() {
 
     updateControlState();
 
-    video.currentTime = 0;
+    if (video) {
+      video.currentTime = 0;
+    }
 
     await video.play();
 
     vmsg(
       'वीडियो Preview चल रहा है।'
     );
-  } catch (_) {
+  } catch (error) {
     state.previewing = false;
 
     updateControlState();
@@ -1801,6 +1919,11 @@ async function preview() {
     );
   }
 }
+
+
+/* =========================================================
+   Remove Video
+   ========================================================= */
 
 function removeVideo() {
   stop({
@@ -1843,7 +1966,7 @@ function safeStorageGet(key) {
     return localStorage.getItem(
       key
     );
-  } catch (_) {
+  } catch (error) {
     return null;
   }
 }
@@ -1857,7 +1980,7 @@ function safeStorageSet(
       key,
       value
     );
-  } catch (_) {
+  } catch (error) {
     msg(
       'सेटिंग सुरक्षित नहीं की जा सकी।'
     );
@@ -1869,7 +1992,7 @@ function safeStorageRemove(key) {
     localStorage.removeItem(
       key
     );
-  } catch (_) {
+  } catch (error) {
     /* Storage unavailable. */
   }
 }
@@ -1996,9 +2119,8 @@ function bindEvents() {
   speech()?.addEventListener(
     'voiceschanged',
     () => {
-      refreshVoice({
-        announce: true
-      });
+      refreshVoice();
+      updateControlState();
     }
   );
 }
@@ -2083,12 +2205,9 @@ async function init() {
   bindEvents();
 
   /*
-   * Browser में voice-list पहली call पर खाली हो सकती है।
-   * voiceschanged event उपलब्ध होने पर पुरुष voice फिर चुनी जाएगी।
+   * Voice list कई browsers में asynchronously आती है।
    */
-  refreshVoice({
-    announce: true
-  });
+  refreshVoice();
 
   resetCompletionState();
   resetProgress();
@@ -2104,17 +2223,15 @@ async function init() {
   try {
     await loadText();
 
-    refreshVoice({
-      announce: true
-    });
+    refreshVoice();
 
     if (state.voice) {
       msg(
-        'App तैयार है। पुरुष संस्कृत TTS voice चयनित है।'
+        'App तैयार है। मधुर पुरुष TTS voice चयनित है।'
       );
     } else {
       msg(
-        'पाठ तैयार है; उपलब्ध voice list की प्रतीक्षा है।'
+        'पाठ तैयार है; पुरुष Sanskrit/Hindi TTS voice अभी उपलब्ध नहीं है।'
       );
     }
 
