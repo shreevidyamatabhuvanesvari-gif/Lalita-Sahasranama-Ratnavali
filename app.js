@@ -60,14 +60,14 @@ const state = {
   textDone: false,
   ttsDone: false,
   voice: null,
+  voiceIsExplicitMale: false,
   objectUrl: '',
   videoReady: false,
   dataReady: false,
   ttsSupported: false,
   speechToken: 0,
   speechActive: false,
-  previewing: false,
-  lastVideoFileName: ''
+  previewing: false
 };
 
 const msg = text => {
@@ -87,7 +87,11 @@ const speech = () =>
 
 const clampRate = value => {
   const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return 0.9;
+
+  if (!Number.isFinite(numeric)) {
+    return 0.9;
+  }
+
   return Math.max(0.6, Math.min(1.2, numeric));
 };
 
@@ -97,101 +101,166 @@ function setPlaybackState(nextState) {
 }
 
 function updateControlState() {
-  const playbackActive = state.playbackState === PLAYBACK_STATES.PLAYING;
-  const playbackPaused = state.playbackState === PLAYBACK_STATES.PAUSED;
-  const canPlay = state.dataReady && state.videoReady && state.ttsSupported;
+  const playing =
+    state.playbackState === PLAYBACK_STATES.PLAYING;
+
+  const paused =
+    state.playbackState === PLAYBACK_STATES.PAUSED;
+
+  const canPlay =
+    state.dataReady &&
+    state.videoReady &&
+    state.ttsSupported;
 
   if (playBtn) {
     playBtn.disabled =
       !canPlay ||
       state.previewing ||
-      playbackActive;
+      playing;
   }
 
   if (pauseBtn) {
-    pauseBtn.disabled = !playbackActive;
+    pauseBtn.disabled = !playing;
   }
 
   if (stopBtn) {
     stopBtn.disabled =
       !state.videoReady &&
       !state.previewing &&
-      !playbackPaused &&
-      !playbackActive;
+      !paused &&
+      !playing;
   }
 
   if (previewBtn) {
-    previewBtn.disabled = !state.videoReady || playbackActive || playbackPaused;
-    previewBtn.textContent = state.previewing
-      ? 'Preview रोकें'
-      : 'वीडियो Preview';
+    previewBtn.disabled =
+      !state.videoReady ||
+      playing ||
+      paused;
+
+    previewBtn.textContent =
+      state.previewing
+        ? 'Preview रोकें'
+        : 'वीडियो Preview';
   }
 
   if (contentMode) {
-    contentMode.disabled = playbackActive || playbackPaused || state.previewing;
+    contentMode.disabled =
+      playing ||
+      paused ||
+      state.previewing;
   }
 
   if (removeBtn) {
-    removeBtn.disabled = !state.videoReady && !state.previewing;
+    removeBtn.disabled =
+      !state.videoReady &&
+      !state.previewing;
   }
 }
 
 function updateRate() {
-  if (!rate || !rateValue) return;
+  if (!rate || !rateValue) {
+    return;
+  }
+
   const safe = clampRate(rate.value);
+
   rate.value = String(safe);
   rateValue.textContent = safe.toFixed(2);
 }
 
-function setTextProgress(percent) {
+function setProgress(
+  bar,
+  output,
+  percent
+) {
   const numeric = Number(percent);
-  const safe = Number.isFinite(numeric)
-    ? Math.max(0, Math.min(100, Math.round(numeric)))
-    : 0;
 
-  if (textBar) textBar.value = safe;
-  if (textPct) textPct.value = `${safe}%`;
-}
+  const safe =
+    Number.isFinite(numeric)
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round(numeric)
+          )
+        )
+      : 0;
 
-function setTtsProgress(percent) {
-  const numeric = Number(percent);
-  const safe = Number.isFinite(numeric)
-    ? Math.max(0, Math.min(100, Math.round(numeric)))
-    : 0;
+  if (bar) {
+    bar.value = safe;
+  }
 
-  if (ttsBar) ttsBar.value = safe;
-  if (ttsPct) ttsPct.value = `${safe}%`;
+  if (output) {
+    output.textContent =
+      `${safe}%`;
+  }
 }
 
 function resetProgress() {
-  setTextProgress(0);
-  setTtsProgress(0);
+  setProgress(
+    textBar,
+    textPct,
+    0
+  );
+
+  setProgress(
+    ttsBar,
+    ttsPct,
+    0
+  );
 }
 
-function setCompletionState(type, value) {
+function setCompletionState(
+  type,
+  value
+) {
   const bool = Boolean(value);
 
-  if (type === 'text') state.textDone = bool;
-  if (type === 'tts') state.ttsDone = bool;
+  if (type === 'text') {
+    state.textDone = bool;
+  }
+
+  if (type === 'tts') {
+    state.ttsDone = bool;
+  }
 
   if (textDoneEl) {
-    textDoneEl.textContent = state.textDone ? 'पाठ: पूर्ण' : 'पाठ: अपूर्ण';
-    textDoneEl.dataset.complete = String(state.textDone);
+    textDoneEl.textContent =
+      state.textDone
+        ? 'पाठ: पूर्ण'
+        : 'पाठ: अपूर्ण';
+
+    textDoneEl.dataset.complete =
+      String(state.textDone);
   }
 
   if (ttsDoneEl) {
-    ttsDoneEl.textContent = state.ttsDone ? 'TTS: पूर्ण' : 'TTS: अपूर्ण';
-    ttsDoneEl.dataset.complete = String(state.ttsDone);
+    ttsDoneEl.textContent =
+      state.ttsDone
+        ? 'TTS: पूर्ण'
+        : 'TTS: अपूर्ण';
+
+    ttsDoneEl.dataset.complete =
+      String(state.ttsDone);
   }
 
-  const finished = state.textDone && state.ttsDone;
+  const finished =
+    state.textDone &&
+    state.ttsDone;
 
   if (gateEl) {
-    gateEl.textContent = finished ? 'वाचन पूर्ण' : 'वाचन जारी है';
-    gateEl.dataset.complete = String(finished);
+    gateEl.textContent =
+      finished
+        ? 'वाचन पूर्ण'
+        : 'वाचन जारी है';
+
+    gateEl.dataset.complete =
+      String(finished);
   }
 
-  if (finished) finishPlayback();
+  if (finished) {
+    finishPlayback();
+  }
 }
 
 function resetCompletionState() {
@@ -199,164 +268,288 @@ function resetCompletionState() {
   state.ttsDone = false;
 
   if (textDoneEl) {
-    textDoneEl.textContent = 'पाठ: अपूर्ण';
-    textDoneEl.dataset.complete = 'false';
+    textDoneEl.textContent =
+      'पाठ: अपूर्ण';
+
+    textDoneEl.dataset.complete =
+      'false';
   }
 
   if (ttsDoneEl) {
-    ttsDoneEl.textContent = 'TTS: अपूर्ण';
-    ttsDoneEl.dataset.complete = 'false';
+    ttsDoneEl.textContent =
+      'TTS: अपूर्ण';
+
+    ttsDoneEl.dataset.complete =
+      'false';
   }
 
   if (gateEl) {
-    gateEl.textContent = 'वाचन जारी है';
-    gateEl.dataset.complete = 'false';
+    gateEl.textContent =
+      'वाचन जारी है';
+
+    gateEl.dataset.complete =
+      'false';
   }
 }
 
 function finishPlayback() {
-  if (!state.textDone || !state.ttsDone) return false;
+  if (
+    !state.textDone ||
+    !state.ttsDone
+  ) {
+    return false;
+  }
 
   state.speechActive = false;
-  state.index = state.segments.length;
+  state.index =
+    state.segments.length;
+
   state.previewing = false;
 
   video?.pause();
-  setPlaybackState(PLAYBACK_STATES.COMPLETED);
 
-  if (current && state.segments.length) {
+  setPlaybackState(
+    PLAYBACK_STATES.COMPLETED
+  );
+
+  if (
+    current &&
+    state.segments.length
+  ) {
     setMultilineText(
       current,
-      state.segments[state.segments.length - 1].text
+      state.segments[
+        state.segments.length - 1
+      ].text
     );
   }
 
   if (ttsStatus) {
-    ttsStatus.textContent = 'अंतिम TTS segment पूर्ण हुआ।';
+    ttsStatus.textContent =
+      'अंतिम TTS segment पूर्ण हुआ।';
   }
 
-  vmsg('पाठ और TTS दोनों पूर्ण — वीडियो रुक गया।');
-  msg('वाचन पूर्ण हुआ।');
+  vmsg(
+    'पाठ और TTS दोनों पूर्ण — वीडियो रुक गया।'
+  );
+
+  msg(
+    'वाचन पूर्ण हुआ।'
+  );
 
   return true;
 }
 
 function clearActive() {
-  textBox?.querySelectorAll('.segment.active').forEach(node => {
-    node.classList.remove('active');
-  });
+  textBox
+    ?.querySelectorAll(
+      '.segment.active'
+    )
+    .forEach(node => {
+      node.classList.remove(
+        'active'
+      );
+    });
 }
 
-function appendTextWithLineBreaks(container, text) {
-  const parts = String(text).split('\n');
+function appendTextWithLineBreaks(
+  container,
+  text
+) {
+  const parts =
+    String(text).split('\n');
 
-  parts.forEach((part, index) => {
-    if (index > 0) {
-      container.append(document.createElement('br'));
+  parts.forEach(
+    (part, index) => {
+      if (index > 0) {
+        container.append(
+          document.createElement('br')
+        );
+      }
+
+      container.append(
+        document.createTextNode(
+          part
+        )
+      );
     }
-
-    container.append(document.createTextNode(part));
-  });
+  );
 }
 
-function setMultilineText(container, text) {
-  if (!container) return;
+function setMultilineText(
+  container,
+  text
+) {
+  if (!container) {
+    return;
+  }
 
   container.replaceChildren();
-  appendTextWithLineBreaks(container, text);
+
+  appendTextWithLineBreaks(
+    container,
+    text
+  );
 }
 
 function renderText() {
-  if (!textBox) return;
+  if (!textBox) {
+    return;
+  }
 
   textBox.replaceChildren();
 
-  const fragment = document.createDocumentFragment();
+  const fragment =
+    document.createDocumentFragment();
 
-  state.segments.forEach((segment, index) => {
-    const node = document.createElement('span');
+  state.segments.forEach(
+    (segment, index) => {
+      const node =
+        document.createElement(
+          'span'
+        );
 
-    node.className = 'segment';
-    node.id = `seg-${index}`;
-    node.dataset.index = String(index);
+      node.className =
+        'segment';
 
-    appendTextWithLineBreaks(node, segment.text);
+      node.id =
+        `seg-${index}`;
 
-    fragment.append(
-      node,
-      document.createTextNode(' ')
-    );
-  });
+      node.dataset.index =
+        String(index);
 
-  textBox.append(fragment);
+      appendTextWithLineBreaks(
+        node,
+        segment.text
+      );
+
+      fragment.append(
+        node,
+        document.createTextNode(' ')
+      );
+    }
+  );
+
+  textBox.append(
+    fragment
+  );
 }
 
-function normalizeSegment(item, fallbackIndex) {
+function normalizeSegment(
+  item,
+  fallbackIndex
+) {
   if (typeof item === 'string') {
-    const text = item.trim();
+    const text =
+      item.trim();
 
     return text
       ? {
-          id: `segment-${fallbackIndex + 1}`,
-          number: fallbackIndex + 1,
+          id:
+            `segment-${fallbackIndex + 1}`,
+          number:
+            fallbackIndex + 1,
           text
         }
       : null;
   }
 
-  if (!item || typeof item !== 'object') {
+  if (
+    !item ||
+    typeof item !== 'object'
+  ) {
     return null;
   }
 
-  const text = String(item.text ?? item.name ?? '').trim();
+  const text =
+    String(
+      item.text ??
+      item.name ??
+      ''
+    ).trim();
 
   if (!text) {
     return null;
   }
 
-  const number = Number(item.number);
+  const number =
+    Number(item.number);
 
   return {
-    id: item.id ?? `segment-${fallbackIndex + 1}`,
-    number: Number.isInteger(number)
-      ? number
-      : fallbackIndex + 1,
+    id:
+      item.id ??
+      `segment-${fallbackIndex + 1}`,
+
+    number:
+      Number.isInteger(number)
+        ? number
+        : fallbackIndex + 1,
+
     text
   };
 }
 
-function assertSequentialNumbers(items, label, expectedCount) {
-  if (!Array.isArray(items) || items.length !== expectedCount) {
+function assertSequentialNumbers(
+  items,
+  label,
+  expectedCount
+) {
+  if (
+    !Array.isArray(items) ||
+    items.length !== expectedCount
+  ) {
     throw new Error(
       `${label} में ठीक ${expectedCount} entries अपेक्षित हैं।`
     );
   }
 
-  for (let i = 0; i < items.length; i += 1) {
-    const number = Number(items[i]?.number);
+  for (
+    let i = 0;
+    i < items.length;
+    i += 1
+  ) {
+    const number =
+      Number(
+        items[i]?.number
+      );
 
     if (number !== i + 1) {
       throw new Error(
         `${label} numbering त्रुटि: स्थान ${
           i + 1
-        } पर ${number || 'अज्ञात'} मिला।`
+        } पर ${
+          number || 'अज्ञात'
+        } मिला।`
       );
     }
   }
 }
 
-function validateCanonicalData(data) {
-  if (!data || typeof data !== 'object') {
-    throw new Error('Canonical JSON object नहीं मिला।');
+function validateCanonicalData(
+  data
+) {
+  if (
+    !data ||
+    typeof data !== 'object'
+  ) {
+    throw new Error(
+      'Canonical JSON object नहीं मिला।'
+    );
   }
 
-  const stotra = Array.isArray(data.segments)
-    ? data.segments
-    : [];
+  const stotra =
+    Array.isArray(
+      data.segments
+    )
+      ? data.segments
+      : [];
 
-  const namavali = Array.isArray(data.namavali)
-    ? data.namavali
-    : [];
+  const namavali =
+    Array.isArray(
+      data.namavali
+    )
+      ? data.namavali
+      : [];
 
   assertSequentialNumbers(
     stotra,
@@ -370,13 +563,23 @@ function validateCanonicalData(data) {
     1000
   );
 
-  if (!String(data.stotraCompletion || '').trim()) {
+  if (
+    !String(
+      data.stotraCompletion ||
+      ''
+    ).trim()
+  ) {
     throw new Error(
       'stotraCompletion उपलब्ध नहीं है।'
     );
   }
 
-  if (!String(data.colophon || '').trim()) {
+  if (
+    !String(
+      data.colophon ||
+      ''
+    ).trim()
+  ) {
     throw new Error(
       'colophon उपलब्ध नहीं है।'
     );
@@ -385,8 +588,11 @@ function validateCanonicalData(data) {
   return data;
 }
 
-function buildModeSegments(mode) {
-  const data = state.sourceData;
+function buildModeSegments(
+  mode
+) {
+  const data =
+    state.sourceData;
 
   if (!data) {
     throw new Error(
@@ -394,7 +600,10 @@ function buildModeSegments(mode) {
     );
   }
 
-  if (mode === CONTENT_MODES.NAMAVALI) {
+  if (
+    mode ===
+    CONTENT_MODES.NAMAVALI
+  ) {
     return data.namavali
       .map(normalizeSegment)
       .filter(Boolean)
@@ -406,80 +615,108 @@ function buildModeSegments(mode) {
       }));
   }
 
-  const stotraSegments = data.segments
-    .map(normalizeSegment)
-    .filter(Boolean)
-    .map(item => ({
-      id: item.id,
-      number: item.number,
-      text: item.text,
-      type: 'stotra'
-    }));
+  const segments =
+    data.segments
+      .map(normalizeSegment)
+      .filter(Boolean)
+      .map(item => ({
+        id: item.id,
+        number: item.number,
+        text: item.text,
+        type: 'stotra'
+      }));
 
-  const completionText =
-    String(data.stotraCompletion).trim();
+  segments.push({
+    id:
+      'stotra-completion',
 
-  stotraSegments.push({
-    id: 'stotra-completion',
-    number: stotraSegments.length + 1,
-    text: completionText,
-    type: 'stotra-completion'
+    number:
+      segments.length + 1,
+
+    text:
+      String(
+        data.stotraCompletion
+      ).trim(),
+
+    type:
+      'stotra-completion'
   });
 
-  return stotraSegments;
+  return segments;
 }
 
 function describeCurrentMode() {
-  if (state.mode === CONTENT_MODES.NAMAVALI) {
-    return 'श्रीललितासहस्रनामावली — 1000 नाम';
-  }
-
-  return 'श्रीललितासहस्रनामस्तोत्रम् — 182 श्लोक + समापन';
+  return state.mode ===
+    CONTENT_MODES.NAMAVALI
+    ? 'श्रीललितासहस्रनामावली — 1000 नाम'
+    : 'श्रीललितासहस्रनामस्तोत्रम् — 182 श्लोक + समापन';
 }
 
-function applyMode(mode, options = {}) {
-  const silent = Boolean(options.silent);
+function applyMode(
+  mode,
+  options = {}
+) {
+  const silent =
+    Boolean(options.silent);
 
   if (
-    mode !== CONTENT_MODES.STOTRA &&
-    mode !== CONTENT_MODES.NAMAVALI
+    mode !==
+      CONTENT_MODES.STOTRA &&
+    mode !==
+      CONTENT_MODES.NAMAVALI
   ) {
-    mode = CONTENT_MODES.STOTRA;
+    mode =
+      CONTENT_MODES.STOTRA;
   }
 
-  if (!state.sourceData) return false;
+  if (!state.sourceData) {
+    return false;
+  }
 
   if (
-    state.playbackState === PLAYBACK_STATES.PLAYING ||
-    state.playbackState === PLAYBACK_STATES.PAUSED ||
+    state.playbackState ===
+      PLAYBACK_STATES.PLAYING ||
+    state.playbackState ===
+      PLAYBACK_STATES.PAUSED ||
     state.previewing
   ) {
-    stop({ silent: true });
+    stop({
+      silent: true
+    });
   }
 
   state.mode = mode;
 
-  if (contentMode) {
-    contentMode.value = mode;
-  }
+  state.segments =
+    buildModeSegments(
+      mode
+    );
 
-  state.segments = buildModeSegments(mode);
   state.index = 0;
   state.textIndex = -1;
   state.ttsCompleted = 0;
+
+  if (contentMode) {
+    contentMode.value =
+      mode;
+  }
 
   renderText();
   clearActive();
   resetCompletionState();
   resetProgress();
-  setPlaybackState(PLAYBACK_STATES.IDLE);
+
+  setPlaybackState(
+    PLAYBACK_STATES.IDLE
+  );
 
   if (current) {
     current.replaceChildren();
   }
 
   if (ttsStatus) {
-    ttsStatus.textContent = 'वाचन के लिए तैयार।';
+    ttsStatus.textContent =
+      'वाचन के लिए तैयार।';
   }
 
   if (contentModeStatus) {
@@ -497,12 +734,13 @@ function applyMode(mode, options = {}) {
 }
 
 async function loadCanonicalData() {
-  const response = await fetch(
-    source,
-    {
-      cache: 'no-store'
-    }
-  );
+  const response =
+    await fetch(
+      source,
+      {
+        cache: 'no-store'
+      }
+    );
 
   if (!response.ok) {
     throw new Error(
@@ -513,7 +751,8 @@ async function loadCanonicalData() {
   let data;
 
   try {
-    data = await response.json();
+    data =
+      await response.json();
   } catch (error) {
     throw new Error(
       'Canonical JSON पढ़ा नहीं जा सका।'
@@ -521,14 +760,11 @@ async function loadCanonicalData() {
   }
 
   state.sourceData =
-    validateCanonicalData(data);
+    validateCanonicalData(
+      data
+    );
 
   state.dataReady = true;
-
-  if (contentMode) {
-    contentMode.value =
-      CONTENT_MODES.STOTRA;
-  }
 
   applyMode(
     CONTENT_MODES.STOTRA,
@@ -542,101 +778,323 @@ async function loadCanonicalData() {
   );
 }
 
-/*
- * केवल पुरुष संस्कृत voice का चयन।
- * महिला voice को fallback के रूप में कभी नहीं चुना जाएगा।
- *
- * Web Speech API gender को standard field के रूप में define नहीं करता,
- * इसलिए browser द्वारा name/voiceURI में उपलब्ध male descriptors
- * के आधार पर चयन किया जाता है।
- */
-function maleSanskrit(voice) {
-  if (!voice) return false;
+
+/* ============================== TTS VOICE ============================== */
+
+function descriptorOf(voice) {
+  if (!voice) {
+    return '';
+  }
+
+  return [
+    voice.name,
+    voice.voiceURI,
+    voice.lang
+  ]
+    .map(
+      value =>
+        String(
+          value || ''
+        )
+    )
+    .join(' ')
+    .trim();
+}
+
+function explicitlyFemale(
+  voice
+) {
+  return /female|woman|girl|lady|feminine|स्त्री|महिला|नारी|मादा/i.test(
+    descriptorOf(voice)
+  );
+}
+
+function explicitlyMale(
+  voice
+) {
+  return /male|man|boy|gentleman|masculine|पुरुष|नर/i.test(
+    descriptorOf(voice)
+  );
+}
+
+function knownGoogleHindiMale(
+  voice
+) {
+  return /hi-IN-(?:Neural2-[BC]|Standard-[BCF]|Wavenet-[BCF]|Chirp3-HD-(?:Achird|Algenib|Algieba|Alnilam|Charon|Enceladus|Fenrir|Iapetus|Orus|Puck|Rasalgethi|Sadachbia))/i.test(
+    descriptorOf(voice)
+  );
+}
+
+function isSanskritVoice(
+  voice
+) {
+  if (!voice) {
+    return false;
+  }
 
   const lang =
-    String(voice.lang || '')
-      .toLowerCase();
-
-  const name =
-    String(voice.name || '');
-
-  const voiceUri =
-    String(voice.voiceURI || '');
+    String(
+      voice.lang || ''
+    ).toLowerCase();
 
   const descriptor =
-    `${name} ${voiceUri}`;
+    descriptorOf(voice);
 
-  const isSanskrit =
+  return (
     lang === 'sa' ||
     lang.startsWith('sa-') ||
     /sanskrit|संस्कृत|vedic|वेद/i.test(
       descriptor
-    );
-
-  const explicitlyMale =
-    /male|man|boy|gentleman|masculine|पुरुष|नर|malevoice/i.test(
-      descriptor
-    );
-
-  return (
-    isSanskrit &&
-    explicitlyMale
+    )
   );
 }
 
-function refreshVoice() {
-  const synth = speech();
+function isHindiVoice(
+  voice
+) {
+  if (!voice) {
+    return false;
+  }
 
-  if (!synth) return false;
+  const lang =
+    String(
+      voice.lang || ''
+    ).toLowerCase();
+
+  return (
+    lang === 'hi' ||
+    lang.startsWith('hi-')
+  );
+}
+
+function isIndianLanguageVoice(
+  voice
+) {
+  if (!voice) {
+    return false;
+  }
+
+  const lang =
+    String(
+      voice.lang || ''
+    ).toLowerCase();
+
+  return /^(hi|sa|mr|bn|gu|kn|ml|pa|ta|te|ur)(-|$)/i.test(
+    lang
+  );
+}
+
+function voiceScore(
+  voice
+) {
+  /*
+   * Explicit female voice को बिल्कुल न चुनें।
+   */
+  if (
+    !voice ||
+    explicitlyFemale(voice)
+  ) {
+    return -Infinity;
+  }
+
+  const maleSignal =
+    explicitlyMale(voice) ||
+    knownGoogleHindiMale(
+      voice
+    );
+
+  let score = 0;
+
+  /*
+   * पुरुष signal सबसे अधिक priority।
+   */
+  if (maleSignal) {
+    score += 1000;
+  }
+
+  /*
+   * Sanskrit preference।
+   */
+  if (
+    isSanskritVoice(
+      voice
+    )
+  ) {
+    score += 500;
+  }
+
+  /*
+   * Hindi preference।
+   * इससे Sanskrit Devanagari भी भारतीय voice में बोली जा सकती है।
+   */
+  if (
+    isHindiVoice(
+      voice
+    )
+  ) {
+    score += 450;
+  }
+
+  /*
+   * अन्य भारतीय languages को भी English voices से ऊपर रखें।
+   */
+  if (
+    isIndianLanguageVoice(
+      voice
+    )
+  ) {
+    score += 300;
+  }
+
+  /*
+   * Default browser voice को हल्की अतिरिक्त प्राथमिकता।
+   */
+  if (voice.default) {
+    score += 20;
+  }
+
+  return score;
+}
+
+function selectVoice() {
+  const synth =
+    speech();
+
+  if (!synth) {
+    state.voice = null;
+    state.voiceIsExplicitMale =
+      false;
+
+    return null;
+  }
 
   const voices =
     synth.getVoices();
 
+  if (!voices.length) {
+    state.voice = null;
+    state.voiceIsExplicitMale =
+      false;
+
+    return null;
+  }
+
+  const ranked =
+    voices
+      .map(
+        (voice, index) => ({
+          voice,
+          index,
+          score:
+            voiceScore(
+              voice
+            )
+        })
+      )
+      .filter(
+        item =>
+          Number.isFinite(
+            item.score
+          )
+      )
+      .sort(
+        (a, b) => {
+          if (
+            b.score !==
+            a.score
+          ) {
+            return (
+              b.score -
+              a.score
+            );
+          }
+
+          if (
+            Boolean(
+              b.voice.default
+            ) !==
+            Boolean(
+              a.voice.default
+            )
+          ) {
+            return b.voice.default
+              ? 1
+              : -1;
+          }
+
+          return (
+            a.index -
+            b.index
+          );
+        }
+      );
+
   state.voice =
-    voices.find(maleSanskrit) || null;
+    ranked[0]?.voice ||
+    null;
+
+  state.voiceIsExplicitMale =
+    Boolean(
+      state.voice &&
+      (
+        explicitlyMale(
+          state.voice
+        ) ||
+        knownGoogleHindiMale(
+          state.voice
+        )
+      )
+    );
+
+  return state.voice;
+}
+
+function refreshVoice() {
+  const synth =
+    speech();
+
+  if (!synth) {
+    state.voice = null;
+    return false;
+  }
+
+  const selected =
+    selectVoice();
 
   if (voiceStatus) {
-    voiceStatus.textContent =
-      state.voice
-        ? `पुरुष संस्कृत voice: ${state.voice.name}`
-        : 'पुरुष संस्कृत voice उपलब्ध नहीं है; महिला fallback नहीं होगा।';
+    if (!selected) {
+      voiceStatus.textContent =
+        'उपयोग योग्य पुरुष voice उपलब्ध नहीं है; महिला voice नहीं चुनी जाएगी।';
+    } else if (
+      state.voiceIsExplicitMale
+    ) {
+      voiceStatus.textContent =
+        `पुरुष voice चयनित: ${selected.name} (${selected.lang})`;
+    } else {
+      voiceStatus.textContent =
+        `उपलब्ध non-female भारतीय voice: ${selected.name} (${selected.lang})`;
+    }
   }
 
   updateControlState();
 
-  return Boolean(state.voice);
+  return Boolean(
+    selected
+  );
 }
 
-async function ensureMaleSanskritVoice(
-  timeout = 4000
-) {
-  const synth = speech();
-
-  if (!synth) return null;
-
-  if (refreshVoice()) {
-    return state.voice;
-  }
-
-  const started =
-    performance.now();
-
-  while (
-    performance.now() - started <
-    timeout
-  ) {
-    await new Promise(
-      resolve =>
-        setTimeout(resolve, 100)
-    );
-
-    if (refreshVoice()) {
-      return state.voice;
-    }
-  }
-
-  return state.voice;
+function selectVoiceImmediately() {
+  /*
+   * जानबूझकर synchronous।
+   *
+   * Mobile browser में Play button का user gesture बहुत देर तक
+   * सुरक्षित नहीं रहता। इसलिए यहाँ कोई await / timer नहीं है।
+   */
+  return refreshVoice();
 }
+
+
+/* ============================== TEXT ============================== */
 
 function reducedMotion() {
   return Boolean(
@@ -655,18 +1113,25 @@ function highlight(index) {
   const segment =
     state.segments[index];
 
-  if (!node || !segment) {
+  if (
+    !node ||
+    !segment
+  ) {
     return;
   }
 
-  node.classList.add('active');
+  node.classList.add(
+    'active'
+  );
 
   node.scrollIntoView({
     behavior:
       reducedMotion()
         ? 'auto'
         : 'smooth',
-    block: 'center'
+
+    block:
+      'center'
   });
 
   if (current) {
@@ -677,7 +1142,9 @@ function highlight(index) {
   }
 }
 
-function updateTextTraversal(index) {
+function updateTextTraversal(
+  index
+) {
   if (
     !state.segments.length ||
     index < 0
@@ -691,14 +1158,15 @@ function updateTextTraversal(index) {
       state.segments.length - 1
     );
 
-  const percent =
+  setProgress(
+    textBar,
+    textPct,
     (
       (state.textIndex + 1) *
       100
     ) /
-    state.segments.length;
-
-  setTextProgress(percent);
+    state.segments.length
+  );
 
   if (
     state.textIndex >=
@@ -714,7 +1182,9 @@ function updateTextTraversal(index) {
 function updateTtsProgress(
   completedSegments
 ) {
-  if (!state.segments.length) {
+  if (
+    !state.segments.length
+  ) {
     return;
   }
 
@@ -727,13 +1197,15 @@ function updateTtsProgress(
       )
     );
 
-  const percent =
+  setProgress(
+    ttsBar,
+    ttsPct,
     (
-      state.ttsCompleted * 100
+      state.ttsCompleted *
+      100
     ) /
-    state.segments.length;
-
-  setTtsProgress(percent);
+    state.segments.length
+  );
 
   if (
     state.ttsCompleted >=
@@ -746,10 +1218,14 @@ function updateTtsProgress(
   }
 }
 
-function setPausedFromTtsError(
+
+/* ============================== TTS ============================== */
+
+function setTtsFailure(
   errorCode
 ) {
-  state.speechActive = false;
+  state.speechActive =
+    false;
 
   video?.pause();
 
@@ -772,7 +1248,7 @@ function setPausedFromTtsError(
   );
 
   msg(
-    'TTS segment पूरा नहीं हो सका। Resume से उसी स्थिति से प्रयास करें।'
+    'TTS segment पूरा नहीं हो सका। Resume से पुनः प्रयास करें।'
   );
 }
 
@@ -781,32 +1257,40 @@ function makeUtterance(
   token
 ) {
   const utterance =
-    new SpeechSynthesisUtterance(text);
+    new SpeechSynthesisUtterance(
+      text
+    );
 
   /*
-   * चयनित पुरुष संस्कृत voice की वास्तविक language
-   * को प्राथमिकता दी जाती है।
+   * चयनित voice की वास्तविक language।
+   * Sanskrit voice न होने पर Hindi voice Devanagari को संभाल सकती है।
    */
   utterance.lang =
     state.voice?.lang ||
-    'sa-IN';
+    'hi-IN';
 
   utterance.rate =
-    clampRate(rate?.value);
+    clampRate(
+      rate?.value
+    );
 
   utterance.pitch = 1;
   utterance.volume = 1;
+
   utterance.voice =
-    state.voice;
+    state.voice ||
+    null;
 
   utterance.onstart = () => {
     if (
-      token !== state.speechToken
+      token !==
+      state.speechToken
     ) {
       return;
     }
 
-    state.speechActive = true;
+    state.speechActive =
+      true;
 
     if (ttsStatus) {
       ttsStatus.textContent =
@@ -820,12 +1304,14 @@ function makeUtterance(
 
   utterance.onend = () => {
     if (
-      token !== state.speechToken
+      token !==
+      state.speechToken
     ) {
       return;
     }
 
-    state.speechActive = false;
+    state.speechActive =
+      false;
 
     const completed =
       Math.min(
@@ -859,31 +1345,34 @@ function makeUtterance(
       PLAYBACK_STATES.PLAYING
     ) {
       /*
-       * सामान्य chaining में cancel() नहीं किया जाएगा,
-       * ताकि segment-to-segment pronunciation न टूटे।
+       * यहाँ cancel() नहीं करना है।
+       * यही अगले segment की natural chain है।
        */
       speakCurrentSegment();
     }
   };
 
-  utterance.onerror = event => {
-    if (
-      token !== state.speechToken
-    ) {
-      return;
-    }
+  utterance.onerror =
+    event => {
+      if (
+        token !==
+        state.speechToken
+      ) {
+        return;
+      }
 
-    setPausedFromTtsError(
-      event?.error ||
-      'अज्ञात त्रुटि'
-    );
-  };
+      setTtsFailure(
+        event?.error ||
+        'अज्ञात त्रुटि'
+      );
+    };
 
   return utterance;
 }
 
 function speakCurrentSegment() {
-  const synth = speech();
+  const synth =
+    speech();
 
   if (
     !synth ||
@@ -894,7 +1383,12 @@ function speakCurrentSegment() {
   }
 
   if (!state.voice) {
-    state.speechActive = false;
+    selectVoiceImmediately();
+  }
+
+  if (!state.voice) {
+    state.speechActive =
+      false;
 
     video?.pause();
 
@@ -904,11 +1398,11 @@ function speakCurrentSegment() {
 
     if (ttsStatus) {
       ttsStatus.textContent =
-        'आवश्यक पुरुष संस्कृत voice उपलब्ध नहीं है।';
+        'किसी उपयोग योग्य voice के बिना TTS प्रारंभ नहीं किया गया।';
     }
 
     msg(
-      'पुरुष संस्कृत voice उपलब्ध नहीं है; TTS प्रारंभ नहीं किया गया।'
+      'Browser ने कोई उपयोग योग्य voice उपलब्ध नहीं की।'
     );
 
     return false;
@@ -948,9 +1442,18 @@ function speakCurrentSegment() {
       token
     );
 
-  state.speechActive = true;
+  state.speechActive =
+    true;
 
   try {
+    /*
+     * Android/Chrome में paused queue को release करने के लिए।
+     */
+    synth.resume();
+
+    /*
+     * speak() तुरंत उसी execution turn में।
+     */
     synth.speak(
       utterance
     );
@@ -961,7 +1464,7 @@ function speakCurrentSegment() {
       token ===
       state.speechToken
     ) {
-      setPausedFromTtsError(
+      setTtsFailure(
         error?.message ||
         'speak() विफल'
       );
@@ -971,10 +1474,9 @@ function speakCurrentSegment() {
   }
 }
 
-async function startFreshPlayback() {
-  const synth = speech();
-
-  await ensureMaleSanskritVoice();
+function startFreshPlayback() {
+  const synth =
+    speech();
 
   if (
     !state.ttsSupported ||
@@ -987,27 +1489,37 @@ async function startFreshPlayback() {
     return false;
   }
 
+  /*
+   * Play button के उसी user-gesture turn में voice चुनें।
+   * यहाँ await बिल्कुल नहीं है।
+   */
+  selectVoiceImmediately();
+
   if (!state.voice) {
     if (ttsStatus) {
       ttsStatus.textContent =
-        'पुरुष संस्कृत voice उपलब्ध न होने से TTS प्रारंभ नहीं होगा।';
+        'उपयोग योग्य पुरुष/non-female voice उपलब्ध नहीं है।';
     }
 
     msg(
-      'पुरुष संस्कृत voice उपलब्ध नहीं है। महिला fallback नहीं किया जाएगा।'
+      'Browser में उपयोग योग्य पुरुष voice उपलब्ध नहीं है।'
     );
 
     return false;
   }
 
   /*
-   * नई playback session में cancel() उचित है।
+   * नई session में पुरानी speech queue हटाना उचित है।
    */
   synth.cancel();
 
   state.speechToken += 1;
-  state.speechActive = false;
-  state.previewing = false;
+  state.speechActive =
+    false;
+
+  state.previewing =
+    false;
+
   state.index = 0;
   state.textIndex = -1;
   state.ttsCompleted = 0;
@@ -1028,45 +1540,50 @@ async function startFreshPlayback() {
     PLAYBACK_STATES.PLAYING
   );
 
-  try {
-    await video.play();
-  } catch (error) {
-    setPlaybackState(
-      PLAYBACK_STATES.IDLE
-    );
+  let videoStarted =
+    true;
 
-    if (ttsStatus) {
-      ttsStatus.textContent =
-        'वीडियो playback प्रारंभ नहीं हो सका।';
+  /*
+   * video.play() और speech.speak() दोनों इसी user gesture में invoke हों।
+   * Promise को await नहीं किया गया है।
+   */
+  if (video) {
+    try {
+      const playPromise =
+        video.play();
+
+      if (
+        playPromise &&
+        typeof playPromise.catch ===
+          'function'
+      ) {
+        playPromise.catch(
+          () => {
+            videoStarted =
+              false;
+
+            video.pause();
+          }
+        );
+      }
+    } catch (error) {
+      videoStarted =
+        false;
     }
-
-    msg(
-      'वीडियो playback प्रारंभ नहीं हो सका।'
-    );
-
-    return false;
   }
 
   const started =
     speakCurrentSegment();
 
   if (!started) {
-    video.pause();
-
-    if (
-      state.playbackState ===
-      PLAYBACK_STATES.PLAYING
-    ) {
-      setPlaybackState(
-        PLAYBACK_STATES.PAUSED
-      );
-    }
-
+    video?.pause();
     return false;
   }
 
   vmsg(
-    'वीडियो और पुरुष संस्कृत वाचन चल रहा है।'
+    videoStarted
+      ? 'वीडियो और पुरुष वाचन चल रहा है।'
+      : 'पुरुष वाचन चल रहा है; वीडियो playback Browser ने रोका है।'
   );
 
   msg(
@@ -1076,8 +1593,9 @@ async function startFreshPlayback() {
   return true;
 }
 
-async function resumePlayback() {
-  const synth = speech();
+function resumePlayback() {
+  const synth =
+    speech();
 
   if (
     !synth ||
@@ -1087,19 +1605,16 @@ async function resumePlayback() {
     return false;
   }
 
-  await ensureMaleSanskritVoice();
+  selectVoiceImmediately();
 
   if (!state.voice) {
     msg(
-      'पुरुष संस्कृत voice उपलब्ध नहीं है।'
+      'उपयोग योग्य voice उपलब्ध नहीं है।'
     );
 
     return false;
   }
 
-  /*
-   * Resume में native speech state को प्राथमिकता दी जाती है।
-   */
   setPlaybackState(
     PLAYBACK_STATES.PLAYING
   );
@@ -1107,7 +1622,9 @@ async function resumePlayback() {
   try {
     if (synth.paused) {
       synth.resume();
-    } else if (!synth.speaking) {
+    } else if (
+      !synth.speaking
+    ) {
       speakCurrentSegment();
     }
   } catch (error) {
@@ -1117,7 +1634,7 @@ async function resumePlayback() {
       PLAYBACK_STATES.PAUSED
     );
 
-    setPausedFromTtsError(
+    setTtsFailure(
       error?.message ||
       'resume() विफल'
     );
@@ -1125,21 +1642,29 @@ async function resumePlayback() {
     return false;
   }
 
-  try {
-    await video.play();
-  } catch (error) {
-    synth.pause();
-    video?.pause();
+  if (video) {
+    try {
+      const playPromise =
+        video.play();
 
-    setPlaybackState(
-      PLAYBACK_STATES.PAUSED
-    );
+      playPromise?.catch(
+        () => {
+          synth.pause();
+          video.pause();
 
-    msg(
-      'वीडियो playback पुनः प्रारंभ नहीं हो सका; TTS paused रखा गया।'
-    );
+          setPlaybackState(
+            PLAYBACK_STATES.PAUSED
+          );
+        }
+      );
+    } catch (error) {
+      synth.pause();
+      video.pause();
 
-    return false;
+      setPlaybackState(
+        PLAYBACK_STATES.PAUSED
+      );
+    }
   }
 
   vmsg(
@@ -1153,7 +1678,7 @@ async function resumePlayback() {
   return true;
 }
 
-async function play() {
+function play() {
   if (!state.dataReady) {
     msg(
       'Canonical पाठ अभी उपलब्ध नहीं है।'
@@ -1197,15 +1722,16 @@ async function play() {
     state.playbackState ===
     PLAYBACK_STATES.PAUSED
   ) {
-    await resumePlayback();
+    resumePlayback();
     return;
   }
 
-  await startFreshPlayback();
+  startFreshPlayback();
 }
 
 function pausePlayback() {
-  const synth = speech();
+  const synth =
+    speech();
 
   if (
     state.playbackState !==
@@ -1239,22 +1765,23 @@ function pausePlayback() {
   );
 }
 
-function stop(options = {}) {
+function stop(
+  options = {}
+) {
   const silent =
     Boolean(options.silent);
 
-  const synth = speech();
+  const synth =
+    speech();
 
   state.speechToken += 1;
-  state.speechActive = false;
-  state.previewing = false;
+  state.speechActive =
+    false;
 
-  /*
-   * Lifecycle cancellation:
-   * stop पर cancel करना जानबूझकर है।
-   */
+  state.previewing =
+    false;
+
   synth?.cancel();
-
   video?.pause();
 
   if (video) {
@@ -1312,8 +1839,10 @@ async function handleVideoEnded() {
     state.playbackState !==
       PLAYBACK_STATES.PLAYING ||
     !state.videoReady ||
-    (state.textDone &&
-      state.ttsDone)
+    (
+      state.textDone &&
+      state.ttsDone
+    )
   ) {
     return;
   }
@@ -1327,12 +1856,9 @@ async function handleVideoEnded() {
       'वीडियो loop जारी है; TTS अपने क्रम से चल रहा है।'
     );
   } catch (error) {
-    /*
-     * Loop failure होने पर synchronized session
-     * सुरक्षित रूप से paused किया जाता है।
-     */
     state.speechToken += 1;
-    state.speechActive = false;
+    state.speechActive =
+      false;
 
     speech()?.pause();
     video?.pause();
@@ -1351,6 +1877,9 @@ async function handleVideoEnded() {
   }
 }
 
+
+/* ============================== VIDEO ============================== */
+
 function clearVideo() {
   if (state.objectUrl) {
     URL.revokeObjectURL(
@@ -1359,24 +1888,32 @@ function clearVideo() {
   }
 
   state.objectUrl = '';
-  state.videoReady = false;
-  state.previewing = false;
-  state.lastVideoFileName = '';
+  state.videoReady =
+    false;
+
+  state.previewing =
+    false;
 
   if (video) {
-    video.onloadedmetadata = null;
-    video.onerror = null;
+    video.onloadedmetadata =
+      null;
+
+    video.onerror =
+      null;
 
     video.removeAttribute(
       'src'
     );
 
     video.load();
-    video.loop = false;
+
+    video.loop =
+      false;
   }
 
   if (placeholder) {
-    placeholder.hidden = false;
+    placeholder.hidden =
+      false;
   }
 
   updateControlState();
@@ -1396,12 +1933,16 @@ function validRatio() {
   );
 }
 
-function metadataLoaded(file) {
+function metadataLoaded(
+  file
+) {
   const width =
-    video?.videoWidth || 0;
+    video?.videoWidth ||
+    0;
 
   const height =
-    video?.videoHeight || 0;
+    video?.videoHeight ||
+    0;
 
   if (!validRatio()) {
     clearVideo();
@@ -1425,12 +1966,12 @@ function metadataLoaded(file) {
     return;
   }
 
-  state.videoReady = true;
-  state.lastVideoFileName =
-    file.name;
+  state.videoReady =
+    true;
 
   if (placeholder) {
-    placeholder.hidden = true;
+    placeholder.hidden =
+      true;
   }
 
   umsg(
@@ -1448,7 +1989,9 @@ function metadataLoaded(file) {
   updateControlState();
 }
 
-function fileAllowed(file) {
+function fileAllowed(
+  file
+) {
   return Boolean(
     file &&
     file.type.startsWith(
@@ -1457,7 +2000,9 @@ function fileAllowed(file) {
   );
 }
 
-function selectVideo(event) {
+function selectVideo(
+  event
+) {
   const file =
     event.target.files?.[0];
 
@@ -1470,7 +2015,8 @@ function selectVideo(event) {
       'कृपया मान्य video file चुनें।'
     );
 
-    event.target.value = '';
+    event.target.value =
+      '';
 
     return;
   }
@@ -1482,36 +2028,44 @@ function selectVideo(event) {
   clearVideo();
 
   state.objectUrl =
-    URL.createObjectURL(file);
+    URL.createObjectURL(
+      file
+    );
 
   video.src =
     state.objectUrl;
 
-  video.loop = false;
-  video.preload = 'metadata';
+  video.loop =
+    false;
+
+  video.preload =
+    'metadata';
 
   video.onloadedmetadata =
-    () => metadataLoaded(file);
-
-  video.onerror = () => {
-    clearVideo();
-
-    if (upload) {
-      upload.value = '';
-    }
-
-    umsg(
-      'वीडियो लोड नहीं हो सका।'
+    () => metadataLoaded(
+      file
     );
 
-    vmsg(
-      'वीडियो codec या file format Browser द्वारा समर्थित नहीं है।'
-    );
+  video.onerror =
+    () => {
+      clearVideo();
 
-    msg(
-      'वीडियो load error।'
-    );
-  };
+      if (upload) {
+        upload.value = '';
+      }
+
+      umsg(
+        'वीडियो लोड नहीं हो सका।'
+      );
+
+      vmsg(
+        'वीडियो codec या file format Browser द्वारा समर्थित नहीं है।'
+      );
+
+      msg(
+        'वीडियो load error।'
+      );
+    };
 
   video.load();
 
@@ -1524,7 +2078,7 @@ function selectVideo(event) {
   );
 }
 
-async function preview() {
+function preview() {
   if (!state.videoReady) {
     msg(
       'पहले वीडियो चुनें।'
@@ -1548,7 +2102,8 @@ async function preview() {
   if (state.previewing) {
     video?.pause();
 
-    state.previewing = false;
+    state.previewing =
+      false;
 
     updateControlState();
 
@@ -1559,20 +2114,37 @@ async function preview() {
     return;
   }
 
+  state.previewing =
+    true;
+
+  updateControlState();
+
+  video.currentTime =
+    0;
+
   try {
-    state.previewing = true;
+    const playPromise =
+      video.play();
 
-    updateControlState();
+    playPromise?.catch(
+      () => {
+        state.previewing =
+          false;
 
-    video.currentTime = 0;
+        updateControlState();
 
-    await video.play();
+        msg(
+          'Preview प्रारंभ नहीं हो सका।'
+        );
+      }
+    );
 
     vmsg(
       'वीडियो Preview चल रहा है।'
     );
   } catch (error) {
-    state.previewing = false;
+    state.previewing =
+      false;
 
     updateControlState();
 
@@ -1608,15 +2180,22 @@ function removeVideo() {
   updateControlState();
 }
 
-function safeStorageGet(key) {
+
+/* ============================== SETTINGS ============================== */
+
+function storageGet(
+  key
+) {
   try {
-    return localStorage.getItem(key);
+    return localStorage.getItem(
+      key
+    );
   } catch (error) {
     return null;
   }
 }
 
-function safeStorageSet(
+function storageSet(
   key,
   value
 ) {
@@ -1632,21 +2211,20 @@ function safeStorageSet(
   }
 }
 
-function safeStorageRemove(key) {
+function storageRemove(
+  key
+) {
   try {
     localStorage.removeItem(
       key
     );
   } catch (error) {
-    /*
-     * Storage unavailable;
-     * application continues normally.
-     */
+    /* Storage unavailable; application continues normally. */
   }
 }
 
 function saveSettings() {
-  safeStorageSet(
+  storageSet(
     'lalitaTtsRate',
     String(
       clampRate(
@@ -1664,7 +2242,7 @@ function saveSettings() {
 
 function loadSettings() {
   const saved =
-    safeStorageGet(
+    storageGet(
       'lalitaTtsRate'
     );
 
@@ -1687,12 +2265,13 @@ function resetApp() {
     silent: true
   });
 
-  safeStorageRemove(
+  storageRemove(
     'lalitaTtsRate'
   );
 
   if (rate) {
-    rate.value = '0.9';
+    rate.value =
+      '0.9';
   }
 
   updateRate();
@@ -1710,6 +2289,9 @@ function resetApp() {
     'App settings reset कर दी गईं।'
   );
 }
+
+
+/* ============================== EVENTS ============================== */
 
 function bindEvents() {
   playBtn?.addEventListener(
@@ -1771,7 +2353,8 @@ function bindEvents() {
     handleVideoEnded
   );
 
-  const synth = speech();
+  const synth =
+    speech();
 
   synth?.addEventListener(
     'voiceschanged',
@@ -1787,7 +2370,8 @@ function hideTextUI() {
     return;
   }
 
-  textSection.hidden = true;
+  textSection.hidden =
+    true;
 
   textSection.setAttribute(
     'aria-hidden',
@@ -1825,8 +2409,11 @@ function browserCheck() {
 
 function cleanup() {
   state.speechToken += 1;
-  state.speechActive = false;
-  state.previewing = false;
+  state.speechActive =
+    false;
+
+  state.previewing =
+    false;
 
   speech()?.cancel();
 
@@ -1835,7 +2422,8 @@ function cleanup() {
       state.objectUrl
     );
 
-    state.objectUrl = '';
+    state.objectUrl =
+      '';
   }
 }
 
@@ -1844,12 +2432,16 @@ window.addEventListener(
   cleanup
 );
 
+
+/* ============================== INIT ============================== */
+
 async function init() {
   if (state.initialized) {
     return;
   }
 
-  state.initialized = true;
+  state.initialized =
+    true;
 
   browserCheck();
   hideTextUI();
@@ -1864,7 +2456,8 @@ async function init() {
   );
 
   if (video) {
-    video.loop = false;
+    video.loop =
+      false;
   }
 
   try {
@@ -1873,12 +2466,13 @@ async function init() {
     msg(
       state.ttsSupported
         ? state.voice
-          ? 'App पूर्णतः तैयार है। पुरुष संस्कृत voice चयनित है।'
-          : 'पाठ तैयार है; पुरुष संस्कृत voice उपलब्ध नहीं है।'
+          ? 'App तैयार है। पुरुष/उपयोग योग्य voice चयनित है।'
+          : 'पाठ तैयार है; voice अभी उपलब्ध नहीं है।'
         : 'पाठ तैयार है; Browser TTS उपलब्ध नहीं है।'
     );
   } catch (error) {
-    state.dataReady = false;
+    state.dataReady =
+      false;
 
     msg(
       `Canonical पाठ लोड नहीं हुआ: ${error.message}`
