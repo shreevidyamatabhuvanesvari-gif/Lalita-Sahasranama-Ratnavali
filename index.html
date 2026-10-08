@@ -23,6 +23,7 @@
 
     <section id="videoSection" class="video-section" aria-labelledby="videoHeading">
       <h2 id="videoHeading">वीडियो</h2>
+
       <div id="videoContainer" class="video-container">
         <video
           id="videoPlayer"
@@ -31,65 +32,156 @@
           playsinline
           aria-label="9:16 पूजा/पाठ वीडियो"
         ></video>
+
         <div id="videoPlaceholder" class="video-placeholder">
           <span aria-hidden="true">9:16</span>
           <small>पहले 9:16 वीडियो चुनें</small>
         </div>
       </div>
-      <p id="videoStatus" class="video-status" role="status" aria-live="polite">वीडियो अपलोड करें।</p>
+
+      <p
+        id="videoStatus"
+        class="video-status"
+        role="status"
+        aria-live="polite"
+      >
+        वीडियो अपलोड करें।
+      </p>
     </section>
 
-    <nav id="playbackControls" class="playback-controls" aria-label="वाचन नियंत्रण">
-      <button id="playButton" type="button" disabled>▶ वाचन प्रारंभ / पुनः चालू</button>
-      <button id="pauseButton" type="button" disabled>Ⅱ विराम</button>
-      <button id="stopButton" type="button" disabled>■ बंद / प्रारंभ पर लौटें</button>
+    <nav
+      id="playbackControls"
+      class="playback-controls"
+      aria-label="वाचन नियंत्रण"
+    >
+      <button id="playButton" type="button" disabled>
+        ▶ वाचन प्रारंभ / पुनः चालू
+      </button>
+
+      <button id="pauseButton" type="button" disabled>
+        Ⅱ विराम
+      </button>
+
+      <button id="stopButton" type="button" disabled>
+        ■ बंद / प्रारंभ पर लौटें
+      </button>
     </nav>
 
-    <aside id="indexPanel" class="index-panel" aria-labelledby="indexTitle">
+    <aside
+      id="indexPanel"
+      class="index-panel"
+      aria-labelledby="indexTitle"
+    >
       <div class="index-panel-inner">
         <h2 id="indexTitle">पाठ एवं वीडियो</h2>
+
         <p class="index-panel-description">
           JSON के canonical स्रोत से पाठ लोड होगा। पाठभेद केवल metadata में रहेंगे; उन्हें playback entries में नहीं मिलाया जाएगा।
         </p>
 
         <div class="upload-group">
           <label for="contentMode">पाठ चुनें</label>
-          <select id="contentMode" aria-describedby="contentModeStatus">
-            <option value="stotra">श्रीललितासहस्रनामस्तोत्रम् — 182 श्लोक + समापन</option>
-            <option value="namavali">श्रीललितासहस्रनामावली — 1000 नाम</option>
+
+          <select
+            id="contentMode"
+            aria-describedby="contentModeStatus"
+          >
+            <option value="stotra">
+              श्रीललितासहस्रनामस्तोत्रम् — 182 श्लोक + समापन
+            </option>
+
+            <option value="namavali">
+              श्रीललितासहस्रनामावली — 1000 नाम
+            </option>
           </select>
-          <small id="contentModeStatus" class="upload-status" role="status" aria-live="polite">
+
+          <small
+            id="contentModeStatus"
+            class="upload-status"
+            role="status"
+            aria-live="polite"
+          >
             पाठ लोड हो रहा है…
           </small>
         </div>
 
         <div class="upload-group">
-          <label for="videoUpload" class="upload-label">9:16 वीडियो चुनें</label>
+          <label
+            for="videoUpload"
+            class="upload-label"
+          >
+            9:16 वीडियो चुनें
+          </label>
+
           <input
             id="videoUpload"
             type="file"
             accept="video/*"
             aria-describedby="videoUploadHint videoUploadStatus"
           >
+
           <small id="videoUploadHint">
             वीडियो का intrinsic आकार ठीक 9:16 होना चाहिए; अनुपात गलत होने पर फ़ाइल अस्वीकार होगी।
           </small>
-          <div id="videoUploadStatus" class="upload-status" role="status" aria-live="polite">
+
+          <div
+            id="videoUploadStatus"
+            class="upload-status"
+            role="status"
+            aria-live="polite"
+          >
             कोई वीडियो चयनित नहीं है।
           </div>
         </div>
 
         <div class="index-actions">
-          <button id="previewButton" type="button" disabled>वीडियो Preview</button>
-          <button id="removeVideoButton" type="button" disabled>वीडियो हटाएँ</button>
-          <button id="saveSettingsButton" type="button">गति सुरक्षित करें</button>
-          <button id="resetButton" type="button">सेटिंग reset करें</button>
+          <button
+            id="previewButton"
+            type="button"
+            disabled
+          >
+            वीडियो Preview
+          </button>
+
+          <button
+            id="removeVideoButton"
+            type="button"
+            disabled
+          >
+            वीडियो हटाएँ
+          </button>
+
+          <button
+            id="saveSettingsButton"
+            type="button"
+          >
+            गति सुरक्षित करें
+          </button>
+
+          <button
+            id="resetButton"
+            type="button"
+          >
+            सेटिंग reset करें
+          </button>
         </div>
       </div>
     </aside>
 
-    <section id="textSection" class="text-section" aria-labelledby="textHeading">
+    <!--
+      संस्कृत पाठ को स्क्रीन पर प्रदर्शित नहीं किया जाएगा।
+      यह section DOM में इसलिए रखा गया है ताकि app.js के
+      textContent/currentSegment references सुरक्षित रहें।
+    -->
+    <section
+      id="textSection"
+      class="text-section"
+      aria-labelledby="textHeading"
+      hidden
+      aria-hidden="true"
+    >
       <h2 id="textHeading">पाठ</h2>
+
       <div
         id="textContent"
         class="text-content"
@@ -97,56 +189,155 @@
         aria-live="off"
         aria-label="संस्कृत पाठ"
       ></div>
-      <div id="currentSegment" class="current-segment" aria-live="polite"></div>
+
+      <div
+        id="currentSegment"
+        class="current-segment"
+        aria-live="polite"
+      ></div>
     </section>
 
-    <section id="progressSection" class="progress-section" aria-labelledby="progressHeading">
+    <section
+      id="progressSection"
+      class="progress-section"
+      aria-labelledby="progressHeading"
+    >
       <h2 id="progressHeading">प्रगति</h2>
 
       <div class="progress-item">
         <div class="progress-label">
           <label for="textProgress">पाठ प्रगति</label>
-          <output id="textProgressValue" for="textProgress">0%</output>
+          <output
+            id="textProgressValue"
+            for="textProgress"
+          >
+            0%
+          </output>
         </div>
-        <progress id="textProgress" max="100" value="0">0%</progress>
+
+        <progress
+          id="textProgress"
+          max="100"
+          value="0"
+        >
+          0%
+        </progress>
       </div>
 
       <div class="progress-item">
         <div class="progress-label">
           <label for="ttsProgress">TTS प्रगति</label>
-          <output id="ttsProgressValue" for="ttsProgress">0%</output>
+          <output
+            id="ttsProgressValue"
+            for="ttsProgress"
+          >
+            0%
+          </output>
         </div>
-        <progress id="ttsProgress" max="100" value="0">0%</progress>
+
+        <progress
+          id="ttsProgress"
+          max="100"
+          value="0"
+        >
+          0%
+        </progress>
       </div>
     </section>
 
-    <section id="ttsSection" class="tts-section" aria-labelledby="ttsHeading">
+    <section
+      id="ttsSection"
+      class="tts-section"
+      aria-labelledby="ttsHeading"
+    >
       <h2 id="ttsHeading">संस्कृत TTS</h2>
-      <div id="ttsVoiceStatus" class="tts-voice-status" role="status" aria-live="polite">
+
+      <div
+        id="ttsVoiceStatus"
+        class="tts-voice-status"
+        role="status"
+        aria-live="polite"
+      >
         महिला संस्कृत voice की जाँच हो रही है…
       </div>
-      <div id="ttsStatus" class="tts-status" role="status" aria-live="polite">
+
+      <div
+        id="ttsStatus"
+        class="tts-status"
+        role="status"
+        aria-live="polite"
+      >
         वाचन के लिए तैयार किया जा रहा है।
       </div>
+
       <div class="tts-setting">
         <label for="ttsRate">वाचन गति</label>
-        <input id="ttsRate" type="range" min="0.6" max="1.2" step="0.05" value="0.9">
-        <output id="ttsRateValue" for="ttsRate">0.90</output>
+
+        <input
+          id="ttsRate"
+          type="range"
+          min="0.6"
+          max="1.2"
+          step="0.05"
+          value="0.9"
+        >
+
+        <output
+          id="ttsRateValue"
+          for="ttsRate"
+        >
+          0.90
+        </output>
       </div>
     </section>
 
-    <section id="completionSection" class="completion-section" aria-labelledby="completionHeading">
+    <section
+      id="completionSection"
+      class="completion-section"
+      aria-labelledby="completionHeading"
+    >
       <h2 id="completionHeading">पूर्णता</h2>
+
       <div class="completion-status-row">
-        <div id="textCompletion" class="completion-status" data-complete="false">पाठ: अपूर्ण</div>
-        <div id="ttsCompletion" class="completion-status" data-complete="false">TTS: अपूर्ण</div>
-        <div id="completionGate" class="completion-status" data-complete="false">वाचन जारी है</div>
+        <div
+          id="textCompletion"
+          class="completion-status"
+          data-complete="false"
+        >
+          पाठ: अपूर्ण
+        </div>
+
+        <div
+          id="ttsCompletion"
+          class="completion-status"
+          data-complete="false"
+        >
+          TTS: अपूर्ण
+        </div>
+
+        <div
+          id="completionGate"
+          class="completion-status"
+          data-complete="false"
+        >
+          वाचन जारी है
+        </div>
       </div>
     </section>
 
-    <section id="systemStatusSection" class="system-status-section" aria-labelledby="systemStatusHeading">
+    <section
+      id="systemStatusSection"
+      class="system-status-section"
+      aria-labelledby="systemStatusHeading"
+    >
       <h2 id="systemStatusHeading">सिस्टम स्थिति</h2>
-      <div id="systemStatus" class="system-status" role="status" aria-live="polite">
+
+      <div
+        id="systemStatus"
+        class="system-status"
+        role="status"
+        aria-live="polite"
+      >
         App प्रारंभ हो रहा है…
       </div>
     </section>
