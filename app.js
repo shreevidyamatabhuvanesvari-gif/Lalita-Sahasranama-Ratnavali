@@ -80,8 +80,21 @@ const state = {
 
 
 /* =========================================================
-   Female Sanskrit Voice Selection
+   Male Sanskrit Voice Selection
    ========================================================= */
+
+const MALE_MARKERS = [
+  'male',
+  'man',
+  'boy',
+  'gent',
+  'gentleman',
+  'masculine',
+  'पुरुष',
+  'नर',
+  'पु',
+  'male voice'
+];
 
 const FEMALE_MARKERS = [
   'female',
@@ -133,6 +146,13 @@ function isFemaleVoice(voice) {
   );
 }
 
+function isMaleVoice(voice) {
+  return hasMarker(
+    descriptorOf(voice),
+    MALE_MARKERS
+  );
+}
+
 function isSanskritVoice(voice) {
   const lang =
     String(
@@ -169,36 +189,45 @@ function isNaturalVoice(voice) {
   );
 }
 
-function voiceScore(voice) {
+function maleVoiceScore(voice) {
   if (!voice) {
     return -Infinity;
   }
 
   /*
-   * केवल महिला voice उम्मीदवार स्वीकार करें।
+   * स्पष्ट महिला voice को कभी प्राथमिक candidate
+   * न बनाया जाए।
    */
-  if (!isFemaleVoice(voice)) {
+  if (isFemaleVoice(voice)) {
     return -Infinity;
   }
 
   let score = 0;
 
   /*
-   * संस्कृत को सर्वोच्च प्राथमिकता।
+   * पुरुष संकेत को सबसे अधिक प्राथमिकता।
+   */
+  if (isMaleVoice(voice)) {
+    score += 180;
+  }
+
+  /*
+   * संस्कृत सर्वोच्च भाषा प्राथमिकता।
    */
   if (isSanskritVoice(voice)) {
-    score += 120;
+    score += 140;
   }
 
   /*
-   * Hindi महिला voice केवल fallback के रूप में।
+   * Hindi को fallback भाषा के रूप में रखें।
    */
   if (isHindiVoice(voice)) {
-    score += 80;
+    score += 90;
   }
 
   /*
-   * Natural / Neural / Premium voice को अतिरिक्त प्राथमिकता।
+   * Natural / Neural / Premium voice को अतिरिक्त
+   * प्राथमिकता।
    */
   if (isNaturalVoice(voice)) {
     score += 35;
@@ -208,10 +237,21 @@ function voiceScore(voice) {
     score += 4;
   }
 
+  /*
+   * Sanskrit या Hindi से संबंधित voice को ही वास्तविक
+   * candidate मानें।
+   */
+  if (
+    !isSanskritVoice(voice) &&
+    !isHindiVoice(voice)
+  ) {
+    return -Infinity;
+  }
+
   return score;
 }
 
-function selectFemaleSanskritVoice() {
+function selectMaleSanskritVoice() {
   const synth = speech();
 
   if (!synth) {
@@ -227,11 +267,14 @@ function selectFemaleSanskritVoice() {
     return null;
   }
 
+  /*
+   * पहले स्पष्ट पुरुष voices।
+   */
   const candidates =
     voices
       .map(voice => ({
         voice,
-        score: voiceScore(voice)
+        score: maleVoiceScore(voice)
       }))
       .filter(
         item =>
@@ -757,17 +800,15 @@ function refreshVoice(
       .filter(Boolean);
 
   /*
-   * कुछ browsers में पहली बार getVoices()
-   * खाली लौटाता है। इसे voice unavailable
-   * नहीं माना जाता।
+   * Browser पहली call पर voice-list खाली दे सकता है।
+   * यह failure नहीं है; voiceschanged इसे बाद में ठीक करेगा।
    */
   if (!voices.length) {
     return null;
   }
 
   /*
-   * जो voice पहले से चयनित और उपलब्ध है,
-   * उसे ही बनाए रखें।
+   * पहले से चयनित male voice उपलब्ध है तो उसे बनाए रखें।
    */
   if (
     state.voice &&
@@ -781,7 +822,7 @@ function refreshVoice(
   }
 
   const selected =
-    selectFemaleSanskritVoice();
+    selectMaleSanskritVoice();
 
   state.voice =
     selected || null;
@@ -792,10 +833,10 @@ function refreshVoice(
 
   if (state.voice) {
     voiceStatus.textContent =
-      `मधुर महिला संस्कृत TTS: ${state.voice.name} (${state.voice.lang})`;
+      `पुरुष संस्कृत TTS: ${state.voice.name} (${state.voice.lang})`;
   } else {
     voiceStatus.textContent =
-      'महिला संस्कृत TTS voice चयनित नहीं हो सकी।';
+      'उपयुक्त पुरुष Sanskrit/Hindi voice अभी उपलब्ध नहीं मिली।';
   }
 
   return state.voice;
@@ -1061,10 +1102,6 @@ function makeUtterance(
       state.speechActive =
         false;
 
-      /*
-       * Browser का benign interruption
-       * fatal error नहीं माना जाता।
-       */
       if (
         event?.error ===
         'interrupted'
@@ -1112,10 +1149,6 @@ function speakCurrentSegment() {
     return false;
   }
 
-  /*
-   * पहले से चयनित working voice को
-   * अनावश्यक रूप से बदलना नहीं है।
-   */
   refreshVoice({
     announce: true
   });
@@ -1132,11 +1165,11 @@ function speakCurrentSegment() {
 
     if (ttsStatus) {
       ttsStatus.textContent =
-        'मधुर महिला संस्कृत TTS voice चयनित नहीं हो सकी।';
+        'उपयुक्त पुरुष Sanskrit/Hindi TTS voice चयनित नहीं हो सकी।';
     }
 
     msg(
-      'TTS voice चयनित नहीं हो सकी।'
+      'पुरुष TTS voice चयनित नहीं हो सकी।'
     );
 
     return false;
@@ -1231,19 +1264,16 @@ async function startFreshPlayback() {
   if (!state.voice) {
     if (ttsStatus) {
       ttsStatus.textContent =
-        'मधुर महिला संस्कृत TTS voice चयनित नहीं हो सकी।';
+        'उपयुक्त पुरुष Sanskrit/Hindi TTS voice चयनित नहीं हो सकी।';
     }
 
     msg(
-      'TTS voice चयनित नहीं हो सकी।'
+      'पुरुष TTS voice चयनित नहीं हो सकी।'
     );
 
     return false;
   }
 
-  /*
-   * नया playback शुरू करते समय cancel करना उचित है।
-   */
   synth.cancel();
 
   state.speechToken += 1;
@@ -1298,7 +1328,7 @@ async function startFreshPlayback() {
   }
 
   vmsg(
-    'वीडियो और मधुर महिला संस्कृत TTS वाचन चल रहा है।'
+    'वीडियो और पुरुष संस्कृत TTS वाचन चल रहा है।'
   );
 
   msg(
@@ -1326,7 +1356,7 @@ async function resumePlayback() {
 
   if (!state.voice) {
     msg(
-      'TTS voice चयनित नहीं हो सकी।'
+      'पुरुष TTS voice चयनित नहीं हो सकी।'
     );
 
     return false;
@@ -1346,9 +1376,6 @@ async function resumePlayback() {
     PLAYBACK_STATES.PLAYING
   );
 
-  /*
-   * Pause के बाद speech resume करें।
-   */
   if (synth.paused) {
     synth.resume();
   } else if (!synth.speaking) {
@@ -1356,7 +1383,7 @@ async function resumePlayback() {
   }
 
   vmsg(
-    'वीडियो और TTS पुनः चल रहे हैं।'
+    'वीडियो और पुरुष TTS पुनः चल रहे हैं।'
   );
 
   msg(
@@ -1427,10 +1454,6 @@ function pausePlayback() {
   }
 
   video?.pause();
-
-  /*
-   * pause — cancel नहीं।
-   */
   speech()?.pause();
 
   setPlaybackState(
@@ -2060,8 +2083,8 @@ async function init() {
   bindEvents();
 
   /*
-   * आरम्भ में voice list खाली हो सकती है।
-   * voiceschanged event बाद में selected voice सेट करेगा।
+   * Browser में voice-list पहली call पर खाली हो सकती है।
+   * voiceschanged event उपलब्ध होने पर पुरुष voice फिर चुनी जाएगी।
    */
   refreshVoice({
     announce: true
@@ -2087,11 +2110,11 @@ async function init() {
 
     if (state.voice) {
       msg(
-        'App तैयार है। मधुर महिला संस्कृत TTS voice चयनित है।'
+        'App तैयार है। पुरुष संस्कृत TTS voice चयनित है।'
       );
     } else {
       msg(
-        'पाठ तैयार है; TTS voice list उपलब्ध होने की प्रतीक्षा है।'
+        'पाठ तैयार है; उपलब्ध voice list की प्रतीक्षा है।'
       );
     }
 
