@@ -482,7 +482,7 @@ progress::-moz-progress-bar {
 
 
 /* =========================================================
-   INDEX PANEL — INTEGRATED SINGLE-PAGE LAYOUT
+   INDEX PANEL
    ========================================================= */
 
 .index-panel {
@@ -1004,6 +1004,7 @@ label:focus-visible {
     width: min(100%, 320px);
   }
 }
+
 
 /* =========================================================
    PRINT
