@@ -54,9 +54,6 @@ const state = {
 
   playbackState: PLAYBACK_STATES.IDLE,
 
-  /*
-   * दोनों completion states स्वतंत्र हैं।
-   */
   textDone: false,
   ttsDone: false,
 
@@ -66,10 +63,6 @@ const state = {
   videoReady: false,
   dataReady: false,
 
-  /*
-   * पुराने/रद्द किए गए utterance callbacks
-   * वर्तमान playback में हस्तक्षेप न करें।
-   */
   speechToken: 0,
   speechActive: false,
 
@@ -129,11 +122,6 @@ function updateControlState() {
       state.playbackState === PLAYBACK_STATES.IDLE;
   }
 
-  /*
-   * Preview केवल स्वतंत्र IDLE अवस्था में चलेगा।
-   * इससे PAUSED reading के video/TTS synchronization
-   * में हस्तक्षेप नहीं होगा।
-   */
   if (previewBtn) {
     previewBtn.disabled =
       !state.videoReady ||
@@ -251,10 +239,6 @@ function setCompletionState(type, value) {
       String(finished);
   }
 
-  /*
-   * Final completion gate केवल तभी खुलेगा
-   * जब दोनों स्वतंत्र states पूर्ण हों।
-   */
   if (finished) {
     finish();
   }
@@ -304,10 +288,6 @@ function finish() {
 
   state.speechActive = false;
 
-  /*
-   * Video duration/ended completion condition नहीं है।
-   * केवल independent completion gate वीडियो रोकता है।
-   */
   video?.pause();
 
   setPlaybackState(
@@ -530,13 +510,6 @@ function femaleSanskrit(voice) {
       voiceDescriptor
     );
 
-  /*
-   * Gender metadata Web Speech API में
-   * standardized नहीं है; इसलिए केवल स्पष्ट
-   * female संकेत स्वीकार किए जाते हैं।
-   *
-   * Male fallback नहीं है।
-   */
   const isFemale =
     /female|woman|girl|lady|स्त्री|महिला|nari/i.test(
       voiceDescriptor
@@ -633,13 +606,6 @@ function updateTextTraversal(index) {
       state.segments.length - 1
     );
 
-  /*
-   * Text progress =
-   * canonical text traversal.
-   *
-   * अंतिम segment तक पहुँचते ही
-   * textDone स्वतंत्र रूप से true होता है।
-   */
   setTextProgress(
     (
       (state.textIndex + 1) *
@@ -680,10 +646,6 @@ function updateTtsProgress(
       )
     );
 
-  /*
-   * TTS progress =
-   * केवल पूर्णतः बोले जा चुके segments।
-   */
   setTtsProgress(
     (
       state.ttsCompleted *
@@ -756,10 +718,6 @@ function makeUtterance(
     state.speechActive =
       false;
 
-    /*
-     * वर्तमान segment अब वास्तव में
-     * पूरा बोला जा चुका है।
-     */
     state.ttsCompleted =
       Math.min(
         state.index + 1,
@@ -770,9 +728,6 @@ function makeUtterance(
       state.ttsCompleted
     );
 
-    /*
-     * अंतिम TTS segment।
-     */
     if (
       state.index >=
       state.segments.length - 1
@@ -790,10 +745,6 @@ function makeUtterance(
 
     state.index += 1;
 
-    /*
-     * Segment chaining के दौरान
-     * cancel() नहीं किया जाता।
-     */
     if (
       state.playbackState ===
       PLAYBACK_STATES.PLAYING
@@ -813,6 +764,8 @@ function makeUtterance(
 
       state.speechActive =
         false;
+
+      video?.pause();
 
       setPlaybackState(
         PLAYBACK_STATES.PAUSED
@@ -940,13 +893,6 @@ async function startFreshPlayback() {
     return false;
   }
 
-  /*
-   * नया playback session:
-   * पिछला native speech session साफ करना
-   * वैध lifecycle cancellation है।
-   *
-   * यह segment chaining पर नहीं चलता।
-   */
   synth.cancel();
 
   state.speechToken++;
@@ -955,9 +901,6 @@ async function startFreshPlayback() {
 
   state.index = 0;
 
-  /*
-   * Fresh reading हमेशा video के आरंभ से।
-   */
   if (video) {
     video.currentTime = 0;
   }
@@ -1034,14 +977,6 @@ async function resumePlayback() {
     PLAYBACK_STATES.PLAYING
   );
 
-  /*
-   * Native SpeechSynthesis state को
-   * application state पर प्राथमिकता।
-   *
-   * paused → resume
-   * speaking → कुछ नहीं
-   * दोनों false → वर्तमान segment से start
-   */
   if (synth.paused) {
     synth.resume();
   } else if (!synth.speaking) {
@@ -1088,9 +1023,6 @@ async function play() {
     return;
   }
 
-  /*
-   * PAUSED = Resume
-   */
   if (
     state.playbackState ===
     PLAYBACK_STATES.PAUSED
@@ -1099,10 +1031,6 @@ async function play() {
     return;
   }
 
-  /*
-   * COMPLETED या partial completion
-   * = नया reading session
-   */
   if (
     state.playbackState ===
       PLAYBACK_STATES.COMPLETED ||
@@ -1172,11 +1100,6 @@ function stop(options = {}) {
   const synth =
     speech();
 
-  /*
-   * Lifecycle cancellation।
-   * Token पहले बदलने से पुराने callbacks
-   * वर्तमान state को mutate नहीं कर सकते।
-   */
   state.speechToken++;
   state.speechActive =
     false;
@@ -1229,10 +1152,6 @@ function stop(options = {}) {
  * ========================================================= */
 
 async function replayVideo() {
-  /*
-   * video ended केवल loop trigger है।
-   * यह completion condition नहीं है।
-   */
   if (
     state.playbackState !==
       PLAYBACK_STATES.PLAYING ||
@@ -1255,6 +1174,8 @@ async function replayVideo() {
       false;
 
     speech()?.pause();
+
+    video?.pause();
 
     setPlaybackState(
       PLAYBACK_STATES.PAUSED
@@ -1384,9 +1305,6 @@ function selectVideo(event) {
     return;
   }
 
-  /*
-   * नया video = नया playback session।
-   */
   stop({
     silent: true
   });
@@ -1435,10 +1353,6 @@ async function preview() {
     return;
   }
 
-  /*
-   * Preview केवल स्वतंत्र IDLE अवस्था में।
-   * इससे paused/playing reading disturb नहीं होगी।
-   */
   if (
     state.playbackState !==
     PLAYBACK_STATES.IDLE
@@ -1622,9 +1536,6 @@ function bindEvents() {
     updateRate
   );
 
-  /*
-   * Video ended कभी completion condition नहीं है।
-   */
   video?.addEventListener(
     'ended',
     replayVideo
@@ -1684,9 +1595,6 @@ function cleanup() {
   state.speechActive =
     false;
 
-  /*
-   * Lifecycle termination point।
-   */
   speech()?.cancel();
 
   if (state.objectUrl) {
